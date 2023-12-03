@@ -211,7 +211,7 @@ ones_like=K.ones_like
 
 pad=tf.pad
 
-pow=K.pow
+power=K.pow
 
 def prod(x, axis=None, keepdims=False, dtype=None):
     x=K.prod(x,axis,keepdims)
@@ -243,8 +243,7 @@ size=tf.size
 def sort(x, axis=-1):
     return sort(x,axis)
 
-def split(x, indices_or_sections, axis=0):
-    return tf.split(x, indices_or_sections, axis)
+
 
 sqrt=tf.math.sqrt
 

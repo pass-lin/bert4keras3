@@ -468,6 +468,8 @@ class MultiHeadAttention(Layer):
             use_bias=self.use_bias,
             kernel_initializer=self.kernel_initializer
         )
+        if self.attention_dropout:
+            self.dropout=Dropout(self.attention_dropout)
         super(MultiHeadAttention, self).build(input_shape)
     @recompute_grad
     def call(self, inputs, mask=None, **kwargs):
@@ -535,7 +537,7 @@ class MultiHeadAttention(Layer):
             a_bias = align(a_bias, [0, -2, -1], ops.ndim(a))
         A = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
         if self.attention_dropout:
-            A = Dropout(self.attention_dropout)(A)
+            A = self.dropout(A)
         # 完成输出
         o = ops.einsum('bhjk,bkhd->bjhd', A, vw)
         if p_bias == 'typical_relative':
@@ -648,7 +650,8 @@ class GatedAttentionUnit(Layer):
             use_bias=self.use_bias,
             kernel_initializer=self.kernel_initializer
         )
-
+        if self.attention_dropout:
+            self.dropout=Dropout(self.attention_dropout)
     @recompute_grad
     def call(self, inputs, mask=None, a_bias=None, p_bias=None):
         if not isinstance(inputs, list):
@@ -664,7 +667,7 @@ class GatedAttentionUnit(Layer):
         # 投影变换
         if self.self_attention:
             x = self.i_dense(x)
-            u, v, qk = ops.split(x, [self.units, self.units, self.key_size], -1)
+            u, v, qk = x[:,:,:self.units],x[:,:,self.units:self.units*2],x[:,:,self.units*2:]
             q, k = self.q_scaleoffset(qk), self.k_scaleoffset(qk)
         else:
             uq = self.uq_dense(q)
@@ -679,7 +682,7 @@ class GatedAttentionUnit(Layer):
             a = a / self.key_size**0.5
         A = attention_normalize(a, mask, -1, self.normalization, a_bias)
         if self.attention_dropout:
-            A = Dropout(self.attention_dropout)(A)
+            A = self.dropout(A)
         # 计算输出
         o = self.o_dense(u * ops.einsum('bmn,bnd->bmd', A, v))
         return o
@@ -926,7 +929,7 @@ class RelativePositionEmbedding(Layer):
 
     def call(self, inputs):
         pos_ids = self.compute_position_ids(inputs)
-        return ops.take(self.embeddings, pos_ids)
+        return ops.take(self.embeddings, pos_ids,axis=0)
 
     def compute_position_ids(self, inputs):
         q, v = inputs
@@ -946,7 +949,9 @@ class RelativePositionEmbedding(Layer):
         return (None, None, self.output_dim)
 
     def compute_mask(self, inputs, mask):
-        return mask[0]
+        if mask!=None:
+            return mask[0]
+        return mask
 
     def get_config(self):
         config = {
@@ -994,7 +999,7 @@ class RelativePositionEmbeddingT5(RelativePositionEmbedding):
         if self.bidirectional:
             num_buckets //= 2
             ret += ops.cast(ops.less(n, 0), 'int32') * num_buckets
-            n = ops.abs(n)
+            n = ops.absolute(n)
         else:
             n = ops.maximum(n, 0)
         # now n is in the range [0, inf)

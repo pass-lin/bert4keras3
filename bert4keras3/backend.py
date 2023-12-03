@@ -7,6 +7,7 @@ from distutils.util import strtobool
 import numpy as np
 import tensorflow as tf
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
+os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
 if is_tf_keras:
     sys.modules['keras'] = tf.keras
 import keras
@@ -110,18 +111,6 @@ def search_layer(inputs, name, exclude_from=None):
                     return layer
 
 
-def align(tensor, axes, ndim=None):
-    """重新对齐tensor（批量版expand_dims）
-    axes：原来的第i维对齐新tensor的第axes[i]维；
-    ndim：新tensor的维度。
-    """
-    assert len(axes) == ops.ndim(tensor)
-    assert ndim or min(axes) >= 0
-    ndim = ndim or max(axes) + 1
-    indices = [None] * ndim
-    for i in axes:
-        indices[i] = slice(None)
-    return tensor[indices]
 
 old_reshape=ops.reshape
 def reshape(tensor, *args):
@@ -150,7 +139,7 @@ def flatten(tensor, start=None, end=None):
     start, end = start or 0, end or ops.ndim(tensor)
     shape = ops.shape(tensor)
     shape = [s or shape[i] for i, s in enumerate(int_shape(tensor))]
-    if os.environ["KERAS_BACKEND"] != "jax":
+    if keras.__version__>'3.0' and os.environ["KERAS_BACKEND"] != "jax":
         shape = shape[:start] + [ops.prod(shape[start:end])] + shape[end:]
         return ops.reshape(tensor, shape)
     shape = shape[:start] + [np.prod(shape[start:end])] + shape[end:]
@@ -294,7 +283,7 @@ def sinusoidal_embeddings(pos, dim, base=10000):
     """
     assert dim % 2 == 0
     indices = ops.arange(0, dim // 2, dtype=K.floatx())
-    indices = ops.pow(K.cast(base, K.floatx()), -2 * indices / dim)
+    indices = ops.power(ops.cast(base, K.floatx()), -2 * indices / dim)
     embeddings = ops.einsum('...,d->...d', pos, indices)
     embeddings = ops.stack([ops.sin(embeddings), ops.cos(embeddings)], axis=-1)
     embeddings = ops.flatten(embeddings, -2)
@@ -310,6 +299,20 @@ class Sinusoidal(keras.initializers.Initializer):
         """
         size, dim = shape
         return sinusoidal_embeddings(ops.arange(size, dtype=K.floatx()), dim)
+def align(tensor, axes, ndim=None):
+    """重新对齐tensor（批量版expand_dims）
+    axes：原来的第i维对齐新tensor的第axes[i]维；
+    ndim：新tensor的维度。
+    """
+    assert len(axes) == ops.ndim(tensor)
+    assert ndim or min(axes) >= 0
+    ndim = ndim or max(axes) + 1
+    indices = [None] * ndim
+    for i in axes:
+        indices[i] = slice(None)
+    if keras.__version__>'3.0' and os.environ["KERAS_BACKEND"] != "jax":
+        return tensor[indices]
+    return tensor[tuple(indices)]
 
 
 def apply_rotary_position_embeddings(sinusoidal, *tensors):
@@ -319,7 +322,7 @@ def apply_rotary_position_embeddings(sinusoidal, *tensors):
     """
     assert len(tensors) > 0, 'at least one input tensor'
     assert all([
-        int_shape(tensor) == int_shape(tensors[0]) for tensor in tensors[1:]
+        list(int_shape(tensor) == int_shape(tensors[0])) for tensor in tensors[1:]
     ]), 'all tensors must have the same shape'
     ndim = ops.ndim(tensors[0])
     sinusoidal = align(sinusoidal, [0, 1, -1], ndim)
