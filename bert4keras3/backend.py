@@ -8,10 +8,16 @@ import numpy as np
 import tensorflow as tf
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
+backlib=os.environ["KERAS_BACKEND"]
+if backlib=='torch':
+    import torch
+elif backlib=='jax':
+    import jax  
 if is_tf_keras:
     sys.modules['keras'] = tf.keras
 import keras
 import keras.backend as K
+
 
 
 if keras.__version__<'3.0':
@@ -22,11 +28,23 @@ if keras.__version__<'3.0':
     from tensorflow.python.ops.custom_gradient import _graph_mode_decorator
     import bert4keras3.ops as ops
     load_variable=tf.train.load_variable
+    
 else:
     from keras import ops
-    
-
-
+    if backlib==torch:
+        def norm(tensor, ord='euclidean', axis=None, keepdims=None):
+            if ord=='euclidean':
+                ord=None
+            return torch.linalg.norm(tensor, ord, axis, keepdims)
+    elif backlib=='jax':
+        def norm(tensor, ord='euclidean', axis=None, keepdims=None):
+            if ord=='euclidean':
+                ord=None
+            return jax.numpy.linalg.norm(tensor, ord, axis, keepdims)
+        
+    else:
+        norm=tf.norm
+ops.norm=norm
 # 判断是否启用重计算（通过时间换空间）
 do_recompute = strtobool(os.environ.get('RECOMPUTE', '0'))
 

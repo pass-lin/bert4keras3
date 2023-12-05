@@ -694,7 +694,7 @@ def one_hot(x, num_classes, axis=-1, dtype="float32"):
 
 def moments(x, axes, keepdims=False):
     need_cast = False
-    ori_dtype = standardize_dtype(x.dtype)
+    ori_dtype = x.dtype
     if ori_dtype == "float16":
         need_cast = True
         x = cast(x, "float32")
