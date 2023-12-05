@@ -929,12 +929,16 @@ def extend_with_gradient_accumulation_v3(BaseOptimizer):
             super(NewOptimizer, self).__init__(*args, **kwargs)
             self.accum_grads = {}
             
-
+        def build(self, var_list):
+            super(NewOptimizer).build(var_list)
+            for var in var_list:
+                self.accum_grads[var] = self.add_variable_from_reference(
+                        reference_variable=var, name="momentum"
+                    )
+                
+                
         def update_step(self, gradient, variable, learning_rate):
-            if variable not in self.accum_grads.keys():
-                self.accum_grads[variable] = ops.zeros(
-                    int_shape(variable), dtype=variable.dtype
-                )
+                
             # 更新判据
             cond = ops.equal(self.iterations % self.grad_accum_steps, 0)
             cond = K.cast(cond, K.floatx())
@@ -974,16 +978,6 @@ def extend_with_gradient_accumulation_v3(BaseOptimizer):
             # 获取梯度
            
 
-        def get_gradients(self, loss, params):
-            accum_grads = []
-            for p in params:
-                if p not in self.accum_grads:
-                    self.accum_grads[p] = K.zeros(
-                        K.int_shape(p), dtype=K.dtype(p)
-                    )
-                accum_grads.append(self.accum_grads[p])
-
-            return [ag / self.grad_accum_steps for ag in accum_grads]
         def get_config(self):
             config = {
                 'grad_accum_steps': self.grad_accum_steps,
@@ -1444,7 +1438,7 @@ def extend_with_isnan_skip(BaseOptimizer):
 
 @export_to_custom_objects
 def extend_with_isnan_skip_v2(BaseOptimizer):
-    """返回新的优化器类，加入梯度累积
+    """返回新的优化器类，加入梯度累积 tf.keras版本
     """
     class NewOptimizer(BaseOptimizer):
         """带有梯度累积的优化器
@@ -1525,16 +1519,7 @@ def extend_with_isnan_skip_v3(BaseOptimizer):
             # 获取梯度
            
 
-        def get_gradients(self, loss, params):
-            accum_grads = []
-            for p in params:
-                if p not in self.accum_grads:
-                    self.accum_grads[p] = K.zeros(
-                        K.int_shape(p), dtype=K.dtype(p)
-                    )
-                accum_grads.append(self.accum_grads[p])
 
-            return [ag / self.grad_accum_steps for ag in accum_grads]
         def get_config(self):
             config = {
                 'grad_accum_steps': self.grad_accum_steps,
