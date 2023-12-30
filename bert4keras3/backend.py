@@ -9,18 +9,21 @@ import tensorflow as tf
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
 backlib=os.environ["KERAS_BACKEND"]
-if backlib=='torch':
+if backlib=='tfkeras':
+    is_tf_keras = True
+elif backlib=='torch':
     import torch
 elif backlib=='jax':
     import jax  
 if is_tf_keras:
     sys.modules['keras'] = tf.keras
+
 import keras
 import keras.backend as K
+do_recompute = strtobool(os.environ.get('RECOMPUTE', '0'))
+use_keras_2 = is_tf_keras or keras.__version__<'3.0'
 
-
-
-if keras.__version__<'3.0':
+if use_keras_2:
     
     from tensorflow.python.client import device_lib
     from tensorflow.python.util import nest, tf_inspect
@@ -28,21 +31,50 @@ if keras.__version__<'3.0':
     from tensorflow.python.ops.custom_gradient import _graph_mode_decorator
     import bert4keras3.ops as ops
     load_variable=tf.train.load_variable
-    
+    norm=tf.norm
 else:
     from keras import ops
-    if backlib==torch:
+    
+    if backlib=='torch':
+        from torch.utils.checkpoint import checkpoint
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
             return torch.linalg.norm(tensor, ord, axis, keepdims)
+        def recompute_grad(call):
+            if not do_recompute:
+                return call
+        
+            def inner(self, inputs, **kwargs):
+                """定义需要求梯度的函数以及重新定义求梯度过程
+                （参考自官方自带的tf.recompute_grad函数）
+                """
+                flat_inputs = nest.flatten(inputs)
+                call_args = tf_inspect.getfullargspec(call).args
+                for key in ['mask', 'training']:
+                    if key not in call_args and key in kwargs:
+                        del kwargs[key]
+                def kernel_call():
+                    return call(self, inputs, **kwargs)
+                return checkpoint(kernel_call,inputs, **kwargs)
+        
+            return inner
     elif backlib=='jax':
+        import jax
+        def recompute_grad(call):
+            if not do_recompute:
+                return call
+            return jax.checkpoint(call)
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
             return jax.numpy.linalg.norm(tensor, ord, axis, keepdims)
         
     else:
+        def recompute_grad(call):
+            if not do_recompute:
+                return call
+            return tf.recompute_grad(call)
         norm=tf.norm
 ops.norm=norm
 # 判断是否启用重计算（通过时间换空间）
@@ -171,7 +203,7 @@ def dtype(x):
         pass
 K.dtype=dtype
 
-if keras.__version__<'3.0':
+if use_keras_2:
     def where(cond, x, y):
         """给tf.where加上自动广播
         """
@@ -207,9 +239,10 @@ def sequence_masking(
     bias: 额外的偏置项，或者附加的mask；
     return_mask: 是否同时返回对齐后的mask。
     """
+    
     if not (mask is None and bias is None):
         if mask is None:
-            if K.dtype(bias) == 'bool':
+            if K.dtype(bias) == 'bool' or (backlib=='torch' and K.dtype(bias) == torch.bool):
                 mask = bias
                 x = ops.where(mask, x, value)
             else:
@@ -226,6 +259,8 @@ def sequence_masking(
 
             if K.dtype(mask) != 'bool':
                 mask = ops.cast(mask, 'bool')
+            elif backlib=='torch' and K.dtype(bias) == torch.bool:
+                mask = ops.cast(mask, torch.bool)
 
             full_mask = align(mask, [0, axes[0]], K.ndim(x))
             for axis in axes[1:]:
@@ -234,7 +269,7 @@ def sequence_masking(
             mask = full_mask
             if bias is None:
                 x = ops.where(mask, x, value)
-            elif K.dtype(bias) == 'bool':
+            elif K.dtype(bias) == 'bool' or (backlib=='torch' and K.dtype(bias) == torch.bool):
                 mask = mask & bias
                 x = ops.where(mask, x, value)
             else:
@@ -280,7 +315,7 @@ def attention_normalize(a, mask=None, axis=-1, method='softmax', bias=None):
     softmax_plus：来自 https://kexue.fm/archives/8823 。
     """
     a, mask = sequence_masking(a, mask, -np.inf, axis, bias, True)
-    if method == 'softmax':
+    if method == 'softmax' :
         return ops.softmax(a, axis=axis)
     else:
         if mask is None:
@@ -433,80 +468,79 @@ if keras.__version__<'3.0':
         else:
             return _graph_mode_decorator(f, args, kwargs)
 
-
-def recompute_grad(call):
-    """重计算装饰器（用来装饰Keras层的call函数）
-    关于重计算，请参考：https://arxiv.org/abs/1604.06174
-    """
-    if not do_recompute:
-        return call
-
-    def inner(self, inputs, **kwargs):
-        """定义需要求梯度的函数以及重新定义求梯度过程
-        （参考自官方自带的tf.recompute_grad函数）
+    def recompute_grad(call):
+        """重计算装饰器（用来装饰Keras层的call函数）
+        关于重计算，请参考：https://arxiv.org/abs/1604.06174
         """
-        flat_inputs = nest.flatten(inputs)
-        call_args = tf_inspect.getfullargspec(call).args
-        for key in ['mask', 'training']:
-            if key not in call_args and key in kwargs:
-                del kwargs[key]
-
-        def kernel_call():
-            """定义前向计算
+        if not do_recompute:
+            return call
+    
+        def inner(self, inputs, **kwargs):
+            """定义需要求梯度的函数以及重新定义求梯度过程
+            （参考自官方自带的tf.recompute_grad函数）
             """
-            return call(self, inputs, **kwargs)
-
-        def call_and_grad(*inputs):
-            """定义前向计算和反向计算
-            """
-            if is_tf_keras:
-                with tape.stop_recording():
-                    outputs = kernel_call()
-                    outputs = tf.identity(outputs)
-            else:
-                outputs = kernel_call()
-
-            def grad_fn(doutputs, variables=None):
-                watches = list(inputs)
-                if variables is not None:
-                    watches += list(variables)
-                with tf.GradientTape() as t:
-                    t.watch(watches)
-                    with tf.control_dependencies([doutputs]):
+            flat_inputs = nest.flatten(inputs)
+            call_args = tf_inspect.getfullargspec(call).args
+            for key in ['mask', 'training']:
+                if key not in call_args and key in kwargs:
+                    del kwargs[key]
+    
+            def kernel_call():
+                """定义前向计算
+                """
+                return call(self, inputs, **kwargs)
+    
+            def call_and_grad(*inputs):
+                """定义前向计算和反向计算
+                """
+                if is_tf_keras:
+                    with tape.stop_recording():
                         outputs = kernel_call()
-                grads = t.gradient(
-                    outputs, watches, output_gradients=[doutputs]
+                        outputs = tf.identity(outputs)
+                else:
+                    outputs = kernel_call()
+    
+                def grad_fn(doutputs, variables=None):
+                    watches = list(inputs)
+                    if variables is not None:
+                        watches += list(variables)
+                    with tf.GradientTape() as t:
+                        t.watch(watches)
+                        with tf.control_dependencies([doutputs]):
+                            outputs = kernel_call()
+                    grads = t.gradient(
+                        outputs, watches, output_gradients=[doutputs]
+                    )
+                    del t
+                    return grads[:len(inputs)], grads[len(inputs):]
+    
+                return outputs, grad_fn
+    
+            if is_tf_keras:  # 仅在tf >= 2.0下可用
+                outputs, grad_fn = call_and_grad(*flat_inputs)
+                flat_outputs = nest.flatten(outputs)
+    
+                def actual_grad_fn(*doutputs):
+                    grads = grad_fn(*doutputs, variables=self.trainable_weights)
+                    return grads[0] + grads[1]
+    
+                watches = flat_inputs + self.trainable_weights
+                watches = [tf.convert_to_tensor(x) for x in watches]
+                tape.record_operation(
+                    call.__name__, flat_outputs, watches, actual_grad_fn
                 )
-                del t
-                return grads[:len(inputs)], grads[len(inputs):]
-
-            return outputs, grad_fn
-
-        if is_tf_keras:  # 仅在tf >= 2.0下可用
-            outputs, grad_fn = call_and_grad(*flat_inputs)
-            flat_outputs = nest.flatten(outputs)
-
-            def actual_grad_fn(*doutputs):
-                grads = grad_fn(*doutputs, variables=self.trainable_weights)
-                return grads[0] + grads[1]
-
-            watches = flat_inputs + self.trainable_weights
-            watches = [tf.convert_to_tensor(x) for x in watches]
-            tape.record_operation(
-                call.__name__, flat_outputs, watches, actual_grad_fn
-            )
-            return outputs
-        else:  # keras + tf >= 1.14 均可用
-            return graph_mode_decorator(call_and_grad, *flat_inputs)
-
-    return inner
+                return outputs
+            else:  # keras + tf >= 1.14 均可用
+                return graph_mode_decorator(call_and_grad, *flat_inputs)
+    
+        return inner
 
 
 ops.reshape = reshape
 ops.flatten = flatten
 
 
-if keras.__version__<'3.0':
+if use_keras_2:
     
     # 给旧版keras新增symbolic（装饰器），以兼容optimizers.py
     keras.backend.symbolic = getattr(keras.backend, 'symbolic', None) or symbolic

@@ -517,7 +517,9 @@ class MultiHeadAttention(Layer):
         q_mask, v_mask = mask
         a_bias, p_bias = kwargs.get('a_bias'), kwargs.get('p_bias')
         if a_bias:
+            
             a_bias = inputs[n]
+            
             n += 1
         if p_bias == 'rotary':
             qw, kw = apply_rotary_position_embeddings(inputs[n], qw, kw)
@@ -536,6 +538,7 @@ class MultiHeadAttention(Layer):
         if a_bias is not None and ops.ndim(a_bias) == 3:
             a_bias = align(a_bias, [0, -2, -1], ops.ndim(a))
         A = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
+        
         if self.attention_dropout:
             A = self.dropout(A)
         # 完成输出
