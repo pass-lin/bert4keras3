@@ -6,6 +6,7 @@ import os, sys
 from distutils.util import strtobool
 import numpy as np
 import tensorflow as tf
+from functools import wraps
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
 backlib=os.environ["KERAS_BACKEND"]
@@ -34,47 +35,23 @@ if use_keras_2:
     norm=tf.norm
 else:
     from keras import ops
-    
+    def recompute_grad(call):
+        if not do_recompute:
+            return call
+        return call
     if backlib=='torch':
-        from torch.utils.checkpoint import checkpoint
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
-            return torch.linalg.norm(tensor, ord, axis, keepdims)
-        def recompute_grad(call):
-            if not do_recompute:
-                return call
-        
-            def inner(self, inputs, **kwargs):
-                """定义需要求梯度的函数以及重新定义求梯度过程
-                （参考自官方自带的tf.recompute_grad函数）
-                """
-                flat_inputs = nest.flatten(inputs)
-                call_args = tf_inspect.getfullargspec(call).args
-                for key in ['mask', 'training']:
-                    if key not in call_args and key in kwargs:
-                        del kwargs[key]
-                def kernel_call():
-                    return call(self, inputs, **kwargs)
-                return checkpoint(kernel_call,inputs, **kwargs)
-        
-            return inner
+            return torch.linalg.norm(tensor, ord, axis, keepdims)  
     elif backlib=='jax':
-        import jax
-        def recompute_grad(call):
-            if not do_recompute:
-                return call
-            return jax.checkpoint(call)
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
             return jax.numpy.linalg.norm(tensor, ord, axis, keepdims)
         
     else:
-        def recompute_grad(call):
-            if not do_recompute:
-                return call
-            return tf.recompute_grad(call)
+       
         norm=tf.norm
 ops.norm=norm
 # 判断是否启用重计算（通过时间换空间）
@@ -467,7 +444,7 @@ if keras.__version__<'3.0':
             return _graph_mode_decorator(f, *args, **kwargs)
         else:
             return _graph_mode_decorator(f, args, kwargs)
-
+    
     def recompute_grad(call):
         """重计算装饰器（用来装饰Keras层的call函数）
         关于重计算，请参考：https://arxiv.org/abs/1604.06174
