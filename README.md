@@ -14,7 +14,7 @@ keras3的相关后端，请参考keras官方的版本要求
 keras2的版本建议是tf1.15-tf2.2+keras2.3.1或tf.keras
 即使你不使用tf作为后端，也要安装一个tf的cpu版本  
 ## 功能
-目前与bert4keras基本相同，可以参考https://github.com/bojone/bert4keras库  
+初始版本与bert4keras基本相同，可以参考https://github.com/bojone/bert4keras库  
 但需要注意的是，如果bert4keras的example中必须要要tf.keras的，在本库中依然需要  
 如果你需要使用tf之外的其他后端，需要修改bert4keras中的tf api  
 由于优化器部分维护工作量过大，本库放弃了对器优化器的维护。并且以后如果推出优化器功能，只keras3版本  
