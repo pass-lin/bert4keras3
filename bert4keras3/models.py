@@ -2780,6 +2780,16 @@ class Misaka_encoder(RoFormerV2):
         """剩余部分
         """
         x = inputs
+        
+        x = self.apply(
+            inputs=x,
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            name='Encoder-Output-LN'
+        )
+        
         x = self.apply(
             inputs=x,
             layer=Dropout,
