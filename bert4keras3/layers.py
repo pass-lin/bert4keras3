@@ -601,6 +601,7 @@ class GatedAttentionUnit(Layer):
         attention_scale=True,
         attention_dropout=None,
         kernel_initializer='glorot_uniform',
+        factorization=False,#是否把V做分解
         **kwargs
     ):
         super(GatedAttentionUnit, self).__init__(**kwargs)
@@ -613,7 +614,7 @@ class GatedAttentionUnit(Layer):
         self.attention_scale = attention_scale
         self.attention_dropout = attention_dropout
         self.kernel_initializer = initializers.get(kernel_initializer)
-
+        self.factorization = factorization
     @integerize_shape
     def build(self, input_shape):
         super(GatedAttentionUnit, self).build(input_shape)
@@ -630,8 +631,15 @@ class GatedAttentionUnit(Layer):
             self.q_scaleoffset = ScaleOffset(offset=self.use_bias)
             self.k_scaleoffset = ScaleOffset(offset=self.use_bias)
         else:
-            self.uq_dense = Dense(
-                units=self.units + self.key_size,
+            
+            self.u_dense = Dense(
+                units=self.units ,
+                activation=self.activation,
+                use_bias=self.use_bias,
+                kernel_initializer=self.kernel_initializer
+            )
+            self.q_dense = Dense(
+                units=self.key_size,
                 activation=self.activation,
                 use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer
@@ -642,26 +650,43 @@ class GatedAttentionUnit(Layer):
                 use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer
             )
-            self.v_dense = Dense(
-                units=self.units,
-                activation=self.activation,
-                use_bias=self.use_bias,
-                kernel_initializer=self.kernel_initializer
-            )
+            if self.factorization:
+                self.v_dense = Dense(
+                    units=self.key_size,
+                    activation='linear',
+                    use_bias=False,
+                    kernel_initializer=self.kernel_initializer
+                )
+                self.vW_dense = Dense(
+                    units=self.units,
+                    activation='linear',
+                    use_bias=False,
+                    kernel_initializer=self.kernel_initializer
+                )
+            else:
+                self.v_dense = Dense(
+                    units=self.units,
+                    activation=self.activation,
+                    use_bias=self.use_bias,
+                    kernel_initializer=self.kernel_initializer
+                )
         self.o_dense = Dense(
             units=hidden_size,
             use_bias=self.use_bias,
             kernel_initializer=self.kernel_initializer
         )
+            
         if self.attention_dropout:
             self.dropout=Dropout(self.attention_dropout)
     @recompute_grad
     def call(self, inputs, mask=None, a_bias=None, p_bias=None):
+        
         if not isinstance(inputs, list):
             inputs, mask = [inputs], [mask]
         if self.self_attention:
             x, n = inputs[0], 1
         else:
+            
             (q, k, v), n = inputs[:3], 3
         mask = None if mask is None else mask[0]
         if a_bias:
@@ -673,8 +698,7 @@ class GatedAttentionUnit(Layer):
             u, v, qk = x[:,:,:self.units],x[:,:,self.units:self.units*2],x[:,:,self.units*2:]
             q, k = self.q_scaleoffset(qk), self.k_scaleoffset(qk)
         else:
-            uq = self.uq_dense(q)
-            u, q = ops.split(uq, [self.units, self.key_size], -1)
+            u, q = self.u_dense(q),self.q_dense(q)
             k, v = self.k_dense(k), self.v_dense(v)
         # 加入RoPE
         if p_bias == 'rotary':
@@ -687,7 +711,13 @@ class GatedAttentionUnit(Layer):
         if self.attention_dropout:
             A = self.dropout(A)
         # 计算输出
-        o = self.o_dense(u * ops.einsum('bmn,bnd->bmd', A, v))
+        try:
+            z=ops.einsum('bmn,bnd->bmd', A, v)
+        except:
+            pass
+        if self.self_attention==False and self.factorization:
+            z = self.vW_dense(z)
+        o = self.o_dense(u * z)
         return o
 
     def compute_mask(self, inputs, mask=None):

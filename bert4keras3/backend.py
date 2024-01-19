@@ -45,13 +45,20 @@ else:
                 ord=None
             return torch.linalg.norm(tensor, ord, axis, keepdims)  
     elif backlib=='jax':
+        def recompute_grad(call):
+            if not do_recompute:
+                return call
+            return jax.checkpoint(call)
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
             return jax.numpy.linalg.norm(tensor, ord, axis, keepdims)
         
     else:
-       
+        def recompute_grad(call):
+           if not do_recompute:
+               return call
+           return tf.recompute_grad(call)
         norm=tf.norm
 ops.norm=norm
 # 判断是否启用重计算（通过时间换空间）

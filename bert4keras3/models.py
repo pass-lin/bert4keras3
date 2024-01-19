@@ -2682,7 +2682,317 @@ class GAU_alpha(RoFormerV2):
         return mapping
 
 
+class Misaka_encoder(RoFormerV2):
+    def get_inputs(self):
+        """Misaka的Encoder的输入只有token_ids
+        """
+        x_in = self.apply(
+            layer=Input,
+            shape=(self.sequence_length,),
+            name='Encoder-Input-Token'
+        )
+        return x_in
+    def apply_embeddings(self, inputs):
+        """
+        Misaka embeding只有word embeding
+        """
+        x=inputs
 
+        x = self.apply(
+            inputs=x,
+            layer=Embedding,
+            input_dim=self.vocab_size,
+            output_dim=self.embedding_size,
+            embeddings_initializer=self.initializer,
+            mask_zero=True,
+            name='Embedding-Token'
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='Embedding-Dropout'
+        )
+        if self.embedding_size != self.hidden_size:
+            x = self.apply(
+                inputs=x,
+                layer=Dense,
+                units=self.hidden_size,
+                use_bias=False,
+                kernel_initializer=self.initializer,
+                name='Embedding-Mapping'
+            )
+
+        return x
+    def apply_main_layers(self, inputs, index):
+        """Misaka-encoder 的主体是基于Gated Attention Unit的模块
+        顺序：GAU  --> Add --> LN
+        """
+        x = inputs
+
+        attention_name = 'Misaka-Encoder-%d-GatedAttentionUnit' % index
+        attention_mask = self.compute_attention_bias(index)
+        position_bias = self.compute_position_bias(x)
+        
+        # Self Attention
+        xi = x
+        x = self.apply(
+            inputs=x,
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            name='%s-Norm' % attention_name
+        )
+        x = [x,x,x, position_bias]
+        arguments = {'a_bias': None, 'p_bias': 'rotary'}
+        if attention_mask is not None:
+            arguments['a_bias'] = True
+            x.insert(-1, attention_mask)
+        
+
+        x = self.apply(
+            inputs=x,
+            layer=GatedAttentionUnit,
+            arguments=arguments,
+            self_attention=False,
+            units=self.intermediate_size,
+            key_size=self.attention_key_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            normalization='softmax_plus',
+            attention_dropout=self.attention_dropout_rate,
+            kernel_initializer=self.initializer,
+            name=attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+        
+        return x
+    def apply_final_layers(self, inputs):
+        """剩余部分
+        """
+        x = inputs
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='Encoder-Output-Dropout'
+        )
+        return x
+class Misaka_decoder(LM_Mask,RoFormerV2):
+    """Misaka模型（Decoder）
+    """
+    def __init__(self, with_lm=True, **kwargs):
+        super(Misaka_decoder, self).__init__(**kwargs)
+        self.with_lm = with_lm
+    def apply_embeddings(self, inputs):
+        c, x = inputs
+
+        x = self.apply(
+            inputs=x,
+            layer=Embedding,
+            input_dim=self.vocab_size,
+            output_dim=self.embedding_size,
+            embeddings_initializer=self.initializer,
+            mask_zero=True,
+            name='Embedding-Token'
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='Decoder-Embedding-Dropout'
+        )
+        if self.embedding_size != self.hidden_size:
+            x = self.apply(
+                inputs=x,
+                layer=Dense,
+                units=self.hidden_size,
+                kernel_initializer=self.initializer,
+                name='Decoder-Embedding-Mapping'
+            )
+
+        return [c, x]
+    def get_inputs(self):
+        """Misaka的Decoder的输入为context序列和token_ids
+        """
+        c_in = self.apply(
+            layer=Input,
+            shape=(self.sequence_length, self.hidden_size),
+            name='Input-Context'
+        )
+        x_in = self.apply(
+            layer=Input,
+            shape=(self.sequence_length,),
+            name='Decoder-Input-Token'
+        )
+        return [c_in, x_in]
+    def apply_main_layers(self, inputs, index):
+        c, x  = inputs[:]
+        
+        self_attention_name='Misaka-Dncoder-%d-GatedAttentionUnit-1' % index
+        cross_attention_name = 'Misaka-Dncoder-%d-GatedAttentionUnit-cross' % index
+        feed_forward_name = "Transformer-%d-FeedForward" % index
+        attention_mask = self.compute_attention_bias(index)
+        position_bias = self.compute_position_bias(x)
+
+        # GAU-1
+        xi = x
+        x = self.apply(
+            inputs=x,
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            name='%s-Norm' % self_attention_name
+        )
+        x = [x,x,x, position_bias]
+        arguments = {'a_bias': None, 'p_bias': 'rotary'}
+        if attention_mask is not None:
+            arguments['a_bias'] = True
+            x.insert(-1, attention_mask)
+        
+       
+        x = self.apply(
+             inputs=x,
+             layer=GatedAttentionUnit,
+             arguments=arguments,
+             self_attention=False,
+             units=self.intermediate_size,
+             key_size=self.attention_key_size,
+             activation=self.hidden_act,
+             use_bias=False,
+             normalization='softmax_plus',
+             attention_dropout=self.attention_dropout_rate,
+             kernel_initializer=self.initializer,
+             factorization=True,
+             name=self_attention_name
+         )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % self_attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % self_attention_name
+        )
+        
+        # Cross Attention
+        xi=x
+        x = self.apply(
+            inputs=x,
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            name='%s-Norm' % cross_attention_name
+        )
+        arguments = {'a_bias': False}
+        x = self.apply(
+            inputs=[x,x,c],
+            layer=GatedAttentionUnit,
+            arguments=arguments,
+            self_attention=False,
+            units=self.intermediate_size,
+            key_size=self.attention_key_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            normalization='softmax_plus',
+            attention_dropout=self.attention_dropout_rate,
+            kernel_initializer=self.initializer,
+            factorization=True,
+            name=cross_attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % cross_attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % cross_attention_name
+        )
+        
+        return [c, x]
+
+    def apply_final_layers(self, inputs):
+        """剩余部分
+        """
+        c,x = inputs
+
+        if self.with_lm:
+            # 预测token概率部分
+            if self.embedding_size != self.hidden_size:
+                x = self.apply(
+                    inputs=x,
+                    layer=Dense,
+                    units=self.embedding_size,
+                    use_bias=False,
+                    kernel_initializer=self.initializer,
+                    name='Output-Mapping'
+                )
+            x = self.apply(
+                inputs=x,
+                layer=Dropout,
+                rate=self.dropout_rate,
+                name='Output-Output-Dropout'
+            )
+            Output_activation = 'softmax' if self.with_lm is True else self.with_lm
+            
+            x = self.apply(
+                    inputs=x,
+                    layer=Dense,
+                    units=self.vocab_size,
+                    activation= Output_activation,
+                    use_bias=False,
+                    kernel_initializer=self.initializer,
+                    name='Decoder-Output-LM'
+                )
+        return x
+    def compute_attention_bias(self, inputs=None):
+        """修改LM Mask的序列长度（从 self.inputs[0] 改为 self.inputs[1] ）
+        """
+        old_inputs = self.inputs[:]
+        self.inputs = [old_inputs[1]]
+        mask = super(Misaka_decoder, self).compute_attention_bias(inputs)
+        self.inputs = old_inputs
+        return mask
+class Misaka(RoFormerV2):
+    """Misaka模型（Encoder-Decoder）
+    """
+    def __init__(self, **kwargs):
+        super(Misaka, self).__init__(**kwargs)
+        kwargs['layers'] = self.layers
+        e_name, d_name = 'Misaka_encoder', 'Misaka_decoder'
+        if 'name' in kwargs:
+            e_name = '%s_%s' % (kwargs['name'], e_name)
+            d_name = '%s_%s' % (kwargs['name'], d_name)
+            del kwargs['name']  # 防止重复传参
+        self._encoder = Misaka_encoder(name=e_name, **kwargs)
+        self._decoder = Misaka_decoder(name=d_name, **kwargs)
+    
+    def build(self, **kwargs):
+        """同时构建Encoder和Decoder
+        """
+        self._encoder.build(**kwargs)
+        self._decoder.build(**kwargs)
+        self._decoder.position_bias = None  # 下面call时将重新初始化
+        self.encoder = self._encoder.model
+        self.decoder = self._decoder.model
+        self.inputs = self.encoder.inputs + self.decoder.inputs[1:]
+        self.outputs = self._decoder.call(
+            self.encoder.outputs + self.decoder.inputs[1:]
+        )
+        self.model = Model(self.inputs, self.outputs)
 def build_transformer_model(
     config_path=None,
     checkpoint_path=None,
@@ -2733,6 +3043,7 @@ def build_transformer_model(
         'mt5.1.1': T5,
         'mt5.1.1_encoder': T5_Encoder,
         'mt5.1.1_decoder': T5_Decoder,
+        'misaka':Misaka,
     }
 
     if is_string(model):
