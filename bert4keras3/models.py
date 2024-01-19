@@ -2682,7 +2682,7 @@ class GAU_alpha(RoFormerV2):
         return mapping
 
 
-class Misaka_encoder(RoFormerV2):
+class Misaka_encoder(GAU_alpha):
     def get_inputs(self):
         """Misaka的Encoder的输入只有token_ids
         """
@@ -2797,7 +2797,7 @@ class Misaka_encoder(RoFormerV2):
             name='Encoder-Output-Dropout'
         )
         return x
-class Misaka_decoder(LM_Mask,RoFormerV2):
+class Misaka_decoder(LM_Mask,GAU_alpha):
     """Misaka模型（Decoder）
     """
     def __init__(self, with_lm=True, **kwargs):
@@ -2976,7 +2976,7 @@ class Misaka_decoder(LM_Mask,RoFormerV2):
         mask = super(Misaka_decoder, self).compute_attention_bias(inputs)
         self.inputs = old_inputs
         return mask
-class Misaka(RoFormerV2):
+class Misaka(GAU_alpha):
     """Misaka模型（Encoder-Decoder）
     """
     def __init__(self, **kwargs):
