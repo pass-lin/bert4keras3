@@ -2744,6 +2744,18 @@ class Misaka_encoder(GAU_alpha):
             epsilon=1e-6,
             name='%s-Norm' % attention_name
         )
+        
+        x2 = self.apply(
+            inputs=x,
+            layer=FeedForward,
+            units=self.attention_key_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            kernel_initializer=self.initializer,
+            name='%s-Adapter' % attention_name
+        )
+                
+                
         x = [x,x,x, position_bias]
         arguments = {'a_bias': None, 'p_bias': 'rotary'}
         if attention_mask is not None:
@@ -2772,7 +2784,7 @@ class Misaka_encoder(GAU_alpha):
             name='%s-Dropout' % attention_name
         )
         x = self.apply(
-            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+            inputs=[xi, x,x2], layer=Add, name='%s-Add' % attention_name
         )
         
         return x
@@ -2854,7 +2866,7 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
         attention_mask = self.compute_attention_bias(index)
         position_bias = self.compute_position_bias(x)
 
-        # GAU-1
+        # GAU
         xi = x
         x = self.apply(
             inputs=x,
@@ -2864,6 +2876,18 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
             epsilon=1e-6,
             name='%s-Norm' % self_attention_name
         )
+        
+        x2 = self.apply(
+            inputs=x,
+            layer=FeedForward,
+            units=self.attention_key_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            kernel_initializer=self.initializer,
+            name='%s-Adapter' % self_attention_name
+        )
+                
+                
         x = [x,x,x, position_bias]
         arguments = {'a_bias': None, 'p_bias': 'rotary'}
         if attention_mask is not None:
@@ -2893,7 +2917,7 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
             name='%s-Dropout' % self_attention_name
         )
         x = self.apply(
-            inputs=[xi, x], layer=Add, name='%s-Add' % self_attention_name
+            inputs=[xi, x,x2], layer=Add, name='%s-Add' % self_attention_name
         )
         
         # Cross Attention
@@ -2906,6 +2930,16 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
             epsilon=1e-6,
             name='%s-Norm' % cross_attention_name
         )
+        x2 = self.apply(
+            inputs=x,
+            layer=FeedForward,
+            units=self.attention_key_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            kernel_initializer=self.initializer,
+            name='%s-Adapter' % cross_attention_name
+        )
+                
         arguments = {'a_bias': False}
         x = self.apply(
             inputs=[x,x,c],
@@ -2929,7 +2963,7 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
             name='%s-Dropout' % cross_attention_name
         )
         x = self.apply(
-            inputs=[xi, x], layer=Add, name='%s-Add' % cross_attention_name
+            inputs=[xi, x,x2], layer=Add, name='%s-Add' % cross_attention_name
         )
         
         return [c, x]
