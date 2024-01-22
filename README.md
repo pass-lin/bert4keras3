@@ -18,6 +18,11 @@ pip install bert4keras3
 keras3的相关后端，请参考keras官方的版本要求
 keras2的版本建议是tf1.15-tf2.2+keras2.3.1或tf.keras
 即使你不使用tf作为后端，也要安装一个tf的cpu版本  
+建议使用keras官方的requirement安装  
+https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt
+https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt  
+https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt  
+
 ## 功能
 初始版本与bert4keras基本相同，可以参考https://github.com/bojone/bert4keras  
 但需要注意的是，如果bert4keras的example中必须要要tf.keras的，在本库中依然需要  
