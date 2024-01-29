@@ -5,6 +5,7 @@
 """
 import os
 os.environ["KERAS_BACKEND"] = "torch"
+
 search_mode='topk'#topp搜搜索
 k=100#如果是topk,k应该是>1的整数，如果是topp，k∈(0,1]
 end_token=1#chatyuan用的是1 作为结束token
@@ -39,7 +40,7 @@ e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，
         "写一个诗歌，关于冬天"]
 for i in range(len(e_in)):
     e_in[i]=tokenizer.encode(e_in[i])[0]
-
+e_in = sequence_padding(e_in)
 d_in = np.repeat([[0,3]+[0]*(max_len-2)],len(e_in),0)
 #预测
 outs = cache_model.predict([e_in,d_in])
