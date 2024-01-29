@@ -6,6 +6,7 @@
 import os
 os.environ["KERAS_BACKEND"] = "torch"
 
+
 search_mode='topk'#topp搜搜索
 k=100#如果是topk,k应该是>1的整数，如果是topp，k∈(0,1]
 end_token=1#chatyuan用的是1 作为结束token
@@ -19,6 +20,7 @@ from bert4keras3.tokenizers import SpTokenizer
 from bert4keras3.snippets import sequence_padding
 from bert4keras3.backend import keras
 from bert4keras3.models import *
+np.random.seed(45)
 tokenizer = SpTokenizer('ChatYuan-keras/spiece.model', token_start=None, token_end='</s>')
 #ckpt是为了兼容苏神的模型，对于新模型我们采用keras3的weights.h5格式存储权重
 t5 =build_transformer_model(
