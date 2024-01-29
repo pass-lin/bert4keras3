@@ -36,7 +36,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 ## 权重
 
-兼容bert4keras支持加载的权重，你可以在本来bert4keras支持的tf.keras、tf1.15-tf2.15加载，和在keras3加载：  
+### 兼容bert4keras支持加载的权重，你可以在本来bert4keras支持的tf.keras、tf1.15-tf2.15加载，和在keras3加载：  
 - <strong>Google原版bert</strong>: https://github.com/google-research/bert
 - <strong>brightmart版roberta</strong>: https://github.com/brightmart/roberta_zh
 - <strong>哈工大版roberta</strong>: https://github.com/ymcui/Chinese-BERT-wwm
@@ -57,7 +57,9 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 - <strong>T5.1.1</strong>: https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511
 - <strong>Multilingual T5</strong>: https://github.com/google-research/multilingual-t5/
 - <strong>GAU-ALPHA</strong>: https://github.com/ZhuiyiTechnology/GAU-alpha
-bert4keras3的新增加的模型权重，不再使用ckpt存储。通过model.load_weights方法读取权重，建议使用keras3加载：      
+
+      
+### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过model.load_weights方法读取权重，建议使用keras3加载：      
 - <strong>自行转换的ChatYuan Keras3版本</strong>:链接：https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  
 
 <strong>注意事项</strong>
