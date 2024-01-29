@@ -36,7 +36,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 ## 权重
 
-### 兼容bert4keras支持加载的权重，你可以在本来bert4keras支持的tf.keras、tf1.15-tf2.15加载，和在keras3加载：  
+### 兼容bert4keras支持加载的权重，你可以在本来bert4keras支持的tf.keras、tf1.15-tf2.15和keras3加载：  
 - <strong>Google原版bert</strong>: https://github.com/google-research/bert
 - <strong>brightmart版roberta</strong>: https://github.com/brightmart/roberta_zh
 - <strong>哈工大版roberta</strong>: https://github.com/ymcui/Chinese-BERT-wwm
