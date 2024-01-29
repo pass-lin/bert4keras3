@@ -288,8 +288,8 @@ def parallel_apply(
         for i, d in generator:
             callback(d)
 
-
-def sequence_padding(inputs, length=None, value=0, seq_dims=1, mode='post'):
+from tqdm import tqdm
+def sequence_padding(inputs, length=None, value=0, seq_dims=1, mode='post',show_tqdm=False):
     """Numpy函数，将序列padding到同一长度
     """
     if length is None:
@@ -304,13 +304,22 @@ def sequence_padding(inputs, length=None, value=0, seq_dims=1, mode='post'):
     outputs = []
     for x in inputs:
         x = x[slices]
-        for i in range(seq_dims):
-            if mode == 'post':
-                pad_width[i] = (0, length[i] - np.shape(x)[i])
-            elif mode == 'pre':
-                pad_width[i] = (length[i] - np.shape(x)[i], 0)
-            else:
-                raise ValueError('"mode" argument must be "post" or "pre".')
+        if show_tqdm:
+            for i in tqdm(range(seq_dims)):
+                if mode == 'post':
+                    pad_width[i] = (0, length[i] - np.shape(x)[i])
+                elif mode == 'pre':
+                    pad_width[i] = (length[i] - np.shape(x)[i], 0)
+                else:
+                    raise ValueError('"mode" argument must be "post" or "pre".')
+        else:
+            for i in range(seq_dims):
+                if mode == 'post':
+                    pad_width[i] = (0, length[i] - np.shape(x)[i])
+                elif mode == 'pre':
+                    pad_width[i] = (length[i] - np.shape(x)[i], 0)
+                else:
+                    raise ValueError('"mode" argument must be "post" or "pre".')
         x = np.pad(x, pad_width, 'constant', constant_values=value)
         outputs.append(x)
 

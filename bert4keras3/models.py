@@ -2,7 +2,7 @@
 # 主要模型
 
 import numpy as np
-from bert4keras3.backend import tf,keras
+from bert4keras3.backend import tf,keras,backlib
 from bert4keras3.layers import *
 from bert4keras3.snippets import insert_arguments
 from bert4keras3.snippets import delete_arguments
@@ -67,6 +67,11 @@ class Transformer(object):
         self.prefix = prefix or ''
         self.name = name
         self.built = False
+        self.cache_position_bias = None
+        self.cache_attention_bias= None
+        self.single_head = False
+        self.is_seq2seq = False
+        self._seed_generators = []
 
     def build(
         self,
@@ -284,7 +289,6 @@ class Transformer(object):
         """构建keras层与checkpoint的变量名之间的映射表
         """
         return {}
-
     def load_weights_from_checkpoint(self, checkpoint, mapping=None):
         """根据mapping从checkpoint加载权重
         """
@@ -335,10 +339,49 @@ class Transformer(object):
                 else:
                      weight_value_pairs.append(w.numpy())
             layer.set_weights(weight_value_pairs)
+    def Search(self,inputs,k=1,mode='greedy'):
+        if mode=='topp':
+            return self.apply(
+                inputs=inputs,
+                layer=ToppSearch,
+                k=k,
+                end_token=self.end_token,
+                name='ToppSearchLayer'
+            )
+        elif mode=='topk':
+            return self.apply(
+                inputs=inputs,
+                layer=TopkSearch,
+                k=k,
+                end_token=self.end_token,
+                name='TopkSearchLayer'
+            )
+        else:
+            return self.apply(
+                inputs=inputs,
+                layer=GreedySearch,
+                k=k,
+                end_token=self.end_token,
+                name='GreedySearchLayer'
+            )
 
+    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
+        """T5相对位置编码
+        """
+        return None
+
+    def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
+                                cross_cache_update_index=None,
+                                attention_mask=None,position_bias=None,
+            
+                                ):
+        raise('this model not support cache model')
+    def get_cache_inputs(self,lengths:list):
+        raise('this model not support cache model')
 class LM_Mask(object):
     """定义下三角Attention Mask（语言模型用）
     """
+        
     def compute_attention_bias(self, inputs=None):
         """通过idxs序列的比较来得到对应的mask
         """
@@ -354,13 +397,181 @@ class LM_Mask(object):
                 inputs=self.inputs[0],
                 layer=Lambda,
                 function=lm_mask,
-                name='Attention-LM-Mask'
+                name='Attention-Mask'
             )
 
         return self.attention_bias
+    def compute_cache_attention_bias(self, x=None,index=0):
+        if self.cache_attention_bias==None:
+            self.cache_attention_bias=self.apply(
+                inputs=x,
+                name='Attention-Mask'
+            )
+        else:
+            return self.apply(
+                inputs=self.cache_attention_bias,
+                layer=TakeLayer,
+                arguments={'index': index},
+                name='TakeLayer'
+            )
+    def initial_cache(self,inputs):
+        caches=[]
+        class Initial_cache(Layer):
+            def __init__(self, attention_key_size,num_attention_heads,single_head=False, **kwargs):
+                super(Initial_cache, self).__init__(**kwargs)
+                self.single_head =single_head
+                self.attention_key_size=attention_key_size
+                self.num_attention_heads=num_attention_heads
+            def get_config(self):
+                config = {
+                    'single_head': self.single_head,
+                    'num_attention_heads':self.num_attention_heads,
+                    'attention_key_size':self.attention_key_size
+                }
+                base_config = super(Initial_cache, self).get_config()
+                return dict(list(base_config.items()) + list(config.items()))
+            def call(self,inputs, **kwargs):
+                caches=[]
+                for t in inputs:
+                    if self.single_head:
+                        cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.attention_key_size] 
+                    else:
+                        cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.num_attention_heads,self.attention_key_size]
+                    caches.append(ops.zeros(cache_shape,dtype=t.dtype))
+                return caches
+            def compute_output_shape(self, input_shape):
+                shapes=[]
+                for t in input_shape:
+                    if self.single_head:
+                        shapes.append([t[0],2,t[1],self.attention_key_size])      
+                    else:
+                        shapes.append([t[0],2,t[1],self.num_attention_heads,self.attention_key_size])   
+                return shapes
+        for _ in range(self.num_hidden_layers):
+            caches.extend(self.apply(
+                inputs=inputs,
+                layer=Initial_cache,
+                single_head=self.single_head,
+                num_attention_heads = self.num_attention_heads,
+                attention_key_size = self.attention_key_size,
+                name='Initial_caches'
+            ))
+        return caches
+    def slice_inputs(self,inputs,key):
+        return inputs[key]
+    def get_new_inputs(self,inputs,key,xs):
+        return inputs[:key]+[xs]+inputs[key+1:]
+    def cache_call(self,inputs:list,input_lengths:list,end_token,
+                   search_mode='greedy',k=1,progress_print=True,index_bias=0):
+        if self.is_seq2seq:
+            caches = self.initial_cache([inputs[1],inputs[0]])
+            key = 1
+        else:
+            caches = self.initial_cache(inputs[:1])
+            key = 0
+        x = self.slice_inputs(inputs,key)
+        length = input_lengths[key]
+        self.cache_attention_bias=None
+        self.cache_position_bias=None
+        self.compute_cache_attention_bias(x,index=0)
+        self.compute_cache_position_bias(inputs)
+        self.end_token = end_token
+        #initial inputs and cache
+        z = self.apply_embeddings(inputs)
+        #print(z)
+        
+        j = len(caches)//self.num_hidden_layers
+        
+        for index in range(self.num_hidden_layers):
+            layer_caches = caches[index*j:index*j+j]
+            out=self.apply_main_cache_layers(z+[layer_caches], index,self_cache_update_index=ops.zeros([],'int32'),
+                                        cross_cache_update_index=ops.zeros([],'int32'),
+                                        attention_mask=self.cache_attention_bias,
+                                        position_bias=self.cache_position_bias)
+            z,cache = out[:-1],out[-1]
+            caches[index*j:index*j+j]=cache
+        
+        class start_index(keras.Layer):
+            def call(self,x):
+                z = x!=0
+                if index_bias>0:
+                    t = ops.ones([ops.shape(z)[0],index_bias],dtype=z.dtype)
+                    z = ops.slice_update(z,[0,0],t)
+                return ops.max(ops.sum(z,-1))-1
+        index = self.apply(
+            inputs=x,
+            layer=start_index,
+            name='start_index'
+        )
+        def cond(inputs, caches, index , flags):
+            cond1 = ops.less(index,length)
+            i = ops.minimum(index,length-1)
+            
+            cond2 = ops.logical_not(ops.equal(inputs[key][:,i],end_token).all())
+            return ops.logical_and(cond1,cond2)
+        
+        def body(inputs, caches, index , flags):
+            if progress_print:
+                
+                print('\r',index,end='')
+            xs = ops.expand_dims(ops.take(self.slice_inputs(inputs,key),index,axis=1),1)
+            new_inputs = self.get_new_inputs(inputs,key,xs)
+            z = self.apply_embeddings(new_inputs)
+            attention_mask = self.compute_cache_attention_bias(index=index)
+            position_bias = self.compute_cache_position_bias(self_cache_update_index = index) 
 
-
-class UniLM_Mask(object):
+            for i in range(self.num_hidden_layers):
+                layer_caches = caches[i*j:i*j+j]
+                out=self.apply_main_cache_layers(z+[layer_caches], i,self_cache_update_index=index,
+                                            cross_cache_update_index=None,
+                                            attention_mask=attention_mask,
+                                            position_bias=position_bias)
+                z,cache = out[:-1],out[-1]
+                caches[i*j:i*j+j]=cache
+            o = self.apply_final_layers(z)
+            index = ops.add(index,ops.ones_like(index,dtype=index.dtype))
+            search_in = [o,index,inputs[key],flags]
+            
+            inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
+            return (inputs, caches, index , flags)
+        class WhileLayer(keras.Layer):
+            def call(self, x):
+                inputs, caches, index =  x[:]
+                flags = ops.ones([ops.shape(caches[0])[0],1],dtype='bool')
+                if backlib=='torch':
+                    while cond(inputs, caches, index , flags):
+                        inputs, caches, index , flags = body(inputs, caches, index , flags)
+                    return (inputs, caches, index)
+                outs=ops.while_loop(
+                    cond,
+                    body,
+                    loop_vars=(inputs, caches, index , flags),
+                    maximum_iterations=length-index,
+                )
+                if progress_print:
+                    print('\n')
+                return outs[:3]
+            def compute_output_shape(self, input_shape):
+                return input_shape
+        out=self.apply(
+            inputs=(inputs, caches, index),
+            layer=WhileLayer,
+            name='WhileLayer'
+        )
+        return ops.cast(out[0][key],'int32')
+    def build_cache_model(self,input_lengths:list,end_token,
+                          search_mode='greedy',k=1,progress_print=False,index_bias=0):
+        inputs=self.get_cache_inputs(input_lengths)
+        out = self.cache_call(inputs,input_lengths,end_token,search_mode,k,progress_print,index_bias)
+        model = keras.Model(inputs,out)
+        inputs = []
+        for modelin in model.inputs: 
+            shape=keras.ops.shape(modelin)
+            shape=[1 if t==None else t for t in shape]
+            inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
+        self.cache_call(inputs,input_lengths,end_token)
+        return model
+class UniLM_Mask(LM_Mask):
     """定义UniLM的Attention Mask（Seq2Seq模型用）
     其中source和target的分区，由segment_ids来表示。
     UniLM: https://arxiv.org/abs/1905.03197
@@ -379,7 +590,7 @@ class UniLM_Mask(object):
                 inputs=self.inputs[1],
                 layer=Lambda,
                 function=unilm_mask,
-                name='Attention-UniLM-Mask'
+                name='Attention-Mask'
             )
 
         return self.attention_bias
@@ -2251,11 +2462,12 @@ class T5_Encoder(T5_Base):
 class T5_Decoder(LM_Mask, T5_Base):
     """Google的T5模型（Decoder）
     """
-    def __init__(self, with_lm=True, cross_position_bias=True, **kwargs):
+    def __init__(self, with_lm=True, cross_position_bias=True,logit_scale=True, **kwargs):
         super(T5_Decoder, self).__init__(**kwargs)
         self.with_lm = with_lm
         self.cross_position_bias = cross_position_bias
-
+        self.logit_scale=logit_scale
+        self.is_seq2seq = True
     def get_inputs(self):
         """T5的Decoder的输入为context序列和token_ids
         """
@@ -2415,15 +2627,7 @@ class T5_Decoder(LM_Mask, T5_Base):
             hidden_initializer=self.initializer,
             name='%s-Norm' % feed_forward_name
         )
-        x = self.apply(
-            inputs=x,
-            layer=FeedForward,
-            units=self.intermediate_size,
-            activation=self.hidden_act,
-            use_bias=False,
-            kernel_initializer=self.initializer,
-            name=feed_forward_name
-        )
+        x = self.apply_ffn_layer(x,feed_forward_name)
         x = self.apply(
             inputs=x,
             layer=Dropout,
@@ -2435,7 +2639,16 @@ class T5_Decoder(LM_Mask, T5_Base):
         )
 
         return [c, x]
-
+    def apply_ffn_layer(self,x,feed_forward_name):
+        return self.apply(
+            inputs=x,
+            layer=FeedForward,
+            units=self.intermediate_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            kernel_initializer=self.initializer,
+            name=feed_forward_name
+        )
     def apply_final_layers(self, inputs):
         """剩余部分
         """
@@ -2460,13 +2673,14 @@ class T5_Decoder(LM_Mask, T5_Base):
             rate=self.dropout_rate,
             name='Decoder-Output-Dropout'
         )
-        x = self.apply(
-            inputs=x,
-            layer=ScaleOffset,
-            scale=self.hidden_size**(-0.5),
-            offset=False,
-            name='Decoder-Output-Scale'
-        )
+        if self.logit_scale:
+            x = self.apply(
+                inputs=x,
+                layer=ScaleOffset,
+                scale=self.hidden_size**(-0.5),
+                offset=False,
+                name='Decoder-Output-Scale'
+            )
 
         if self.with_lm:
             # 预测token概率部分
@@ -2541,8 +2755,185 @@ class T5_Decoder(LM_Mask, T5_Base):
             self.position_bias = (p1, p2)
 
         return self.position_bias
+    def get_cache_inputs(self,lengths:list):
+        """Misaka的Decoder的输入为context序列和token_ids
+        """
+        c_in = self.apply(
+            layer=Input,
+            shape=(lengths[0], self.hidden_size),
+            name='Input-Context-cache'
+        )
+        x_in = self.apply(
+            layer=Input,
+            shape=[lengths[1]],
+            name='Decoder-Input-Token-cache'
+        )
+        return [c_in, x_in] 
+    def compute_attention_bias(self, inputs=None):
+        """修改LM Mask的序列长度（从 self.inputs[0] 改为 self.inputs[1] ）
+        """
+        old_inputs = self.inputs[:]
+        self.inputs = [old_inputs[1]]
+        mask = super(T5_Decoder, self).compute_attention_bias(inputs)
+        self.inputs = old_inputs
+        return mask
+
+    def compute_position_bias(self, inputs=None):
+        """T5相对位置编码
+        """
+        if self.position_bias is None:
+
+            x, c = inputs
+            p1 = self.apply(
+                inputs=[x, x],
+                layer=RelativePositionEmbeddingT5,
+                input_dim=32,
+                output_dim=self.num_attention_heads,
+                bidirectional=False,
+                embeddings_initializer=self.initializer,
+                name='Decoder-Embedding-Relative-Position'
+            )
+            p2 = self.apply(
+                inputs=[x, c],
+                layer=RelativePositionEmbeddingT5,
+                input_dim=32,
+                output_dim=self.num_attention_heads,
+                bidirectional=False,
+                embeddings_initializer=self.initializer,
+                name='Decoder-Embedding-Relative-Position'
+            )
+            self.position_bias = (p1, p2)
+
+        return self.position_bias
+    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
+        """T5相对位置编码
+        """
+        if self.cache_position_bias is None:
+
+            c,x = inputs
+            p1 = self.apply(
+                inputs=[x, x],
+                layer=RelativePositionEmbeddingT5,
+                input_dim=32,
+                output_dim=self.num_attention_heads,
+                bidirectional=False,
+                embeddings_initializer=self.initializer,
+                name='Decoder-Embedding-Relative-Position'
+            )
+            p2 = self.apply(
+                inputs=[x, c],
+                layer=RelativePositionEmbeddingT5,
+                input_dim=32,
+                output_dim=self.num_attention_heads,
+                bidirectional=False,
+                embeddings_initializer=self.initializer,
+                name='Decoder-Embedding-Relative-Position'
+            )
+            self.cache_position_bias = (p1, p2)
+        if inputs!=None:
+            return None
+        p1,p2=self.cache_position_bias
 
 
+        p1 = self.apply(
+            inputs=p1,
+            layer=TakeLayer,
+            arguments={'index': self_cache_update_index},
+            name='TakeLayer'
+        )
+        
+        p2 = self.apply(
+            inputs=p2,
+            layer=TakeLayer,
+            arguments={'index': self_cache_update_index},
+            name='TakeLayer'
+        )
+        self.length_cache_position_bias = [p1,p2]
+        
+        return self.length_cache_position_bias
+
+    def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
+                                cross_cache_update_index=None,
+                                attention_mask=None,position_bias=None,
+            
+                                ):
+        """T5的Decoder主体是基于Self-Attention、Cross-Attention的模块
+        顺序：LN --> Att1 --> Add --> LN --> Att2 --> Add -->  LN --> FFN --> Add
+        """
+        c, x ,caches = inputs
+        z = self.layer_norm_conds[0]
+
+        self_attention_name = 'Decoder-Transformer-%d-MultiHeadSelfAttention' % index
+        cross_attention_name = 'Decoder-Transformer-%d-MultiHeadCrossAttention' % index
+        feed_forward_name = 'Decoder-Transformer-%d-FeedForward' % index
+
+        
+        # Self Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % self_attention_name
+        )
+        arguments={
+                'a_bias': True,
+                'p_bias': 't5_relative',
+                'cache_update_index':True,
+                'use_cache':True,
+            }
+        
+        x,cache_self = self.apply(
+            inputs=[x, x, x, attention_mask,caches[0],self_cache_update_index, position_bias[0]],
+            arguments=arguments,
+            name=self_attention_name
+        )
+        caches[0]=cache_self
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % self_attention_name
+        )
+
+        # Cross Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % cross_attention_name
+        )
+        if self.cross_position_bias:
+            inputs = [x, c, c, position_bias[1]]
+            arguments = {'a_bias': None, 'p_bias': 't5_relative'}
+        else:
+            inputs = [x, c, c]
+            arguments = {'a_bias': None, 'p_bias': None}
+        arguments['use_cache']=True
+        
+        inputs.insert(3,caches[1])
+        if cross_cache_update_index is None:
+            arguments['cache_update_index']=False
+        else:
+            arguments['cache_update_index']=True
+            inputs.insert(4,cross_cache_update_index)
+
+        x ,cross_cache = self.apply(
+                inputs=inputs,
+                arguments=arguments,
+                name=cross_attention_name
+            )
+        caches[1]=cross_cache
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % cross_attention_name
+        )
+
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % feed_forward_name
+        )
+        x = self.apply_ffn_layer(x,feed_forward_name)
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+
+        return [c, x ,caches]
 class T5(T5_Base):
     """Google的T5模型（Encoder-Decoder）
     """
@@ -2570,8 +2961,15 @@ class T5(T5_Base):
             self.encoder.outputs + self.decoder.inputs[1:]
         )
         self.model = Model(self.inputs, self.outputs)
-
-
+    def build_cache_model(self,input_lengths:list,end_token,search_mode='greedy',k=1,progress_print=False,index_bias=0):
+        self.cache_decoder = self._decoder.build_cache_model(input_lengths,end_token,
+                                                    search_mode,k,
+                                                    progress_print,
+                                                    index_bias)
+        y = self.cache_decoder([self.encoder.output,self.cache_decoder.inputs[1]])
+        self.cache_t5 = keras.Model([self.encoder.inputs[0],self.cache_decoder.inputs[1]],y)
+        
+        return self.cache_t5
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
     """
@@ -3010,6 +3408,7 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
         mask = super(Misaka_decoder, self).compute_attention_bias(inputs)
         self.inputs = old_inputs
         return mask
+    
 class Misaka(GAU_alpha):
     """Misaka模型（Encoder-Decoder）
     """

@@ -246,7 +246,7 @@ def sequence_masking(
             elif backlib=='torch' and K.dtype(bias) == torch.bool:
                 mask = ops.cast(mask, torch.bool)
 
-            full_mask = align(mask, [0, axes[0]], K.ndim(x))
+            full_mask = align(mask, [0, axes[0]], ops.ndim(x))
             for axis in axes[1:]:
                 full_mask = full_mask & align(mask, [0, axis], ops.ndim(x))
 

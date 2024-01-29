@@ -858,6 +858,9 @@ cast=K.cast
 
 cond=tf.cond
 
+def slice_update(inputs, start_indices, updates):
+    return tf.compiler.tf2xla.python.xla.dynamic_update_slice(inputs, updates, start_indices)
+
 def convert_to_numpy(x):
     if isinstance(x, tf.SparseTensor):
         x = tf.sparse.to_dense(x)
