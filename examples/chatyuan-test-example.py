@@ -4,8 +4,9 @@
 
 """
 import os
-os.environ["KERAS_BACKEND"] = "torch"
+os.environ["KERAS_BACKEND"] = "jax"
 
+#jax的话第一次跑是很慢的（因为要编译），但是第二次跑在128长度下相较于torch提速一倍
 
 search_mode='topk'#topp搜搜索
 k=100#如果是topk,k应该是>1的整数，如果是topp，k∈(0,1]
