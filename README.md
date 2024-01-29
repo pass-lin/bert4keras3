@@ -56,8 +56,8 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 - <strong>Chinese-GEN项目下的模型</strong>: https://github.com/bojone/chinese-gen
 - <strong>T5.1.1</strong>: https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511
 - <strong>Multilingual T5</strong>: https://github.com/google-research/multilingual-t5/
-- <strong>GAU-ALPHA</strong>: https://github.com/ZhuiyiTechnology/GAU-alpha
--<strong>自行转换的ChatYuan Keras3版本</strong>: 链接：https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  
+- <strong>GAU-ALPHA</strong>: https://github.com/ZhuiyiTechnology/GAU-alpha   
+- <strong>自行转换的ChatYuan Keras3版本</strong>:链接：https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。
