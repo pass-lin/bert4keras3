@@ -38,9 +38,9 @@ cache_model=t5.build_cache_model(input_lengths,end_token=1,
                        search_mode=search_mode,k=k,progress_print=True,index_bias=1)
 
 #从bert4torch抄过来的example
-e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，请领导批准。",
-        "你能干什么？",
-        "一个关于冬天的诗歌:"]
+e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，请领导批准",
+        "你能干什么",
+        "一个关于冬天的诗歌"]
 for i in range(len(e_in)):
     e_in[i]=tokenizer.encode(e_in[i])[0]
 e_in = sequence_padding(e_in)
