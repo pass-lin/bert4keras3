@@ -7,4 +7,6 @@
 [基础测试，bert的调用和测试 ](https://github.com/pass-lin/bert4keras3/blob/main/examples/basic_extract_features.py)  
 [基础测试，roformer的调用和测试 ](https://github.com/pass-lin/bert4keras3/blob/main/examples/roformer_extract_features.py)    
 [基础测试，roformer-v2的调用和测试 ](https://github.com/pass-lin/bert4keras3/blob/main/examples/roformerv2_extract_features.py)   
+[基础测试，测试bert的cache模式是否正常](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_simbert.py)  
 [基于chatyuan的模型测试，进行了kv-cache优化。如果想使用cache模型一定要参考这个example。](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  
+
