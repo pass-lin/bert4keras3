@@ -4,7 +4,7 @@
 
 """
 import os
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "torch"
 
 #jax的话第一次跑是很慢的（因为要编译），但是第二次跑在128长度下相较于torch提速一倍
 
@@ -14,7 +14,7 @@ end_token=1#chatyuan用的是1 作为结束token
 max_len=128#生成最大长度
 progress_print=True#是否打印生成的进度，jax好像无效
 index_bias=1#如果和t5一样开头是0，那就要选择为1，否则是0
-input_lengths=[None,max_len]#不用管
+input_lengths=[None,max_len]#代表输入的最大长度，第一个的None是说encoder的输入不限长度
 
 import torch
 from bert4keras3.tokenizers import SpTokenizer
@@ -38,13 +38,13 @@ cache_model=t5.build_cache_model(input_lengths,end_token=1,
                        search_mode=search_mode,k=k,progress_print=True,index_bias=1)
 
 #从bert4torch抄过来的example
-e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，请领导批准",
-        "你能干什么",
-        "写一个诗歌，关于冬天"]
+e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，请领导批准。",
+        "你能干什么？",
+        "一个关于冬天的诗歌:"]
 for i in range(len(e_in)):
     e_in[i]=tokenizer.encode(e_in[i])[0]
 e_in = sequence_padding(e_in)
-d_in = np.repeat([[0,3]+[0]*(max_len-2)],len(e_in),0)
+d_in = np.repeat([[0,3]+[0]*(max_len-2)],len(e_in),0)#decoder的输入要padding到最大长度
 #预测
 outs = cache_model.predict([e_in,d_in])
 #输出
