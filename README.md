@@ -68,5 +68,10 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 # 版本更新
 ## 2023.12.30发布bert4keras3的第一个版本1.0 
 对bert4keras除优化器部分外的升级，实现对tensorflow，jax，torch的多后端兼容
+## 1.31号更新，发布1.1版本  
+转换了chatyuan模型权重（基于t5模型）  
+更新了支持批量运算的t5-cache推理版本，详细使用参考[t5-cache的使用example](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  。里面较为详细地列出了cache模型要如何使用。  
+除了T5，还增加了[bert](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_simbert.py)和
+[roformer/roformer-v2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_simroformer.py)的cache支持，用法和t5一样，example里只是测试一下与greedy是否一致
 
 
