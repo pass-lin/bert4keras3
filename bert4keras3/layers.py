@@ -463,11 +463,13 @@ class GreedySearch(SearchBase):
         return ops.argmax(t,-1)
     def call(self, inputs, **kwargs):
         hidden_state,update_index,out_ids,flags = inputs[:]
+        
         y = self.search(hidden_state)
         t = ops.full_like(y,self.end_token)
         y = ops.where(flags,y,t)
         start = [0,update_index]
         flags = y!=self.end_token
+
         return ops.slice_update(out_ids,start,ops.cast(y,out_ids.dtype)),flags
     
 class TopkSearch(GreedySearch):
@@ -943,10 +945,10 @@ class PositionEmbedding(Layer):
     def call(self, inputs):
         """如果custom_position_ids，那么第二个输入为自定义的位置id
         """
-        if self.custom_position_ids:
+        flag = isinstance(inputs,list)
+        if self.custom_position_ids or flag :
             inputs, position_ids = inputs
-            if 'int' not in K.dtype(position_ids):
-                position_ids = ops.cast(position_ids, 'int32')
+            position_ids = ops.cast(position_ids, 'int32')
         else:
             input_shape = ops.shape(inputs)
             batch_size, seq_len = input_shape[0], input_shape[1]
@@ -960,8 +962,8 @@ class PositionEmbedding(Layer):
             embeddings_y = ops.take(embeddings, position_ids % self.input_dim)
             embeddings = alpha * embeddings_x + (1 - alpha) * embeddings_y
         else:
-            if self.custom_position_ids:
-                embeddings = ops.take(self.embeddings, position_ids)
+            if self.custom_position_ids or flag :
+                embeddings = ops.take(self.embeddings, position_ids,axis=0)
             else:
                 embeddings = self.embeddings[None, :seq_len]
 

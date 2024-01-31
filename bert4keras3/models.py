@@ -72,7 +72,7 @@ class Transformer(object):
         self.single_head = False
         self.is_seq2seq = False
         self._seed_generators = []
-
+        self.custom_position_ids = False
     def build(
         self,
         attention_caches=None,
@@ -366,8 +366,6 @@ class Transformer(object):
             )
 
     def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
-        """T5相对位置编码
-        """
         return None
 
     def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
@@ -378,6 +376,8 @@ class Transformer(object):
         raise('this model not support cache model')
     def get_cache_inputs(self,lengths:list):
         raise('this model not support cache model')
+    def get_custom_position_ids(self):
+        return self.custom_position_ids
 class LM_Mask(object):
     """定义下三角Attention Mask（语言模型用）
     """
@@ -401,10 +401,10 @@ class LM_Mask(object):
             )
 
         return self.attention_bias
-    def compute_cache_attention_bias(self, x=None,index=0):
+    def compute_cache_attention_bias(self, inputs=None,key=0,index=0):
         if self.cache_attention_bias==None:
             self.cache_attention_bias=self.apply(
-                inputs=x,
+                inputs=inputs[key],
                 name='Attention-Mask'
             )
         else:
@@ -457,29 +457,32 @@ class LM_Mask(object):
                 name='Initial_caches'
             ))
         return caches
-    def slice_inputs(self,inputs,key):
-        return inputs[key]
-    def get_new_inputs(self,inputs,key,xs):
+    def slice_inputs(self,inputs,key,index):
+        return ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
+    def get_new_inputs(self,inputs,key,xs,index=None):
         return inputs[:key]+[xs]+inputs[key+1:]
     def cache_call(self,inputs:list,input_lengths:list,end_token,
                    search_mode='greedy',k=1,progress_print=True,index_bias=0):
+        old_flag = self.custom_position_ids
         if self.is_seq2seq:
             caches = self.initial_cache([inputs[1],inputs[0]])
             key = 1
         else:
             caches = self.initial_cache(inputs[:1])
             key = 0
-        x = self.slice_inputs(inputs,key)
+        x = inputs[key]
         length = input_lengths[key]
         self.cache_attention_bias=None
         self.cache_position_bias=None
-        self.compute_cache_attention_bias(x,index=0)
+        self.compute_cache_attention_bias(inputs,key,index=0)
         self.compute_cache_position_bias(inputs)
         self.end_token = end_token
         #initial inputs and cache
+
         z = self.apply_embeddings(inputs)
         #print(z)
-        
+        if not isinstance(z,list):
+            z = [z]
         j = len(caches)//self.num_hidden_layers
         
         for index in range(self.num_hidden_layers):
@@ -504,35 +507,44 @@ class LM_Mask(object):
             name='start_index'
         )
         def cond(inputs, caches, index , flags):
-            cond1 = ops.less(index,length)
-            i = ops.minimum(index,length-1)
-            
-            cond2 = ops.logical_not(ops.equal(inputs[key][:,i],end_token).all())
+            cond1 = ops.less(index,length-1)
+            cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
             return ops.logical_and(cond1,cond2)
         
         def body(inputs, caches, index , flags):
             if progress_print:
                 
                 print('\r',index,end='')
-            xs = ops.expand_dims(ops.take(self.slice_inputs(inputs,key),index,axis=1),1)
-            new_inputs = self.get_new_inputs(inputs,key,xs)
+            xs = self.slice_inputs(inputs,key,index)
+            self.custom_position_ids = self.get_custom_position_ids()
+            new_inputs = self.get_new_inputs(inputs,key,xs,index)
+            #print(xs)
             z = self.apply_embeddings(new_inputs)
+            
+            if not isinstance(z,list):
+                z = [z]
             attention_mask = self.compute_cache_attention_bias(index=index)
             position_bias = self.compute_cache_position_bias(self_cache_update_index = index) 
-
+            
             for i in range(self.num_hidden_layers):
                 layer_caches = caches[i*j:i*j+j]
                 out=self.apply_main_cache_layers(z+[layer_caches], i,self_cache_update_index=index,
                                             cross_cache_update_index=None,
                                             attention_mask=attention_mask,
                                             position_bias=position_bias)
+                
                 z,cache = out[:-1],out[-1]
+                
                 caches[i*j:i*j+j]=cache
-            o = self.apply_final_layers(z)
-            index = ops.add(index,ops.ones_like(index,dtype=index.dtype))
-            search_in = [o,index,inputs[key],flags]
             
+            #print(z[1])
+            o = self.apply_final_layers(z)
+            
+            index += 1
+            search_in = [o,index,inputs[key],flags]
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
+            #print(index)
+            #print(ops.cast(inputs[key],'int32'))
             return (inputs, caches, index , flags)
         class WhileLayer(keras.Layer):
             def call(self, x):
@@ -546,7 +558,7 @@ class LM_Mask(object):
                     cond,
                     body,
                     loop_vars=(inputs, caches, index , flags),
-                    maximum_iterations=length-index,
+                    maximum_iterations=length-index                                                                                                                                                                                                                                                                                                                                                       ,
                 )
                 if progress_print:
                     print('\n')
@@ -558,9 +570,12 @@ class LM_Mask(object):
             layer=WhileLayer,
             name='WhileLayer'
         )
+        self.custom_position_ids = old_flag
         return ops.cast(out[0][key],'int32')
     def build_cache_model(self,input_lengths:list,end_token,
                           search_mode='greedy',k=1,progress_print=False,index_bias=0):
+        
+
         inputs=self.get_cache_inputs(input_lengths)
         out = self.cache_call(inputs,input_lengths,end_token,search_mode,k,progress_print,index_bias)
         model = keras.Model(inputs,out)
@@ -570,6 +585,7 @@ class LM_Mask(object):
             shape=[1 if t==None else t for t in shape]
             inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
         self.cache_call(inputs,input_lengths,end_token)
+        
         return model
 class UniLM_Mask(LM_Mask):
     """定义UniLM的Attention Mask（Seq2Seq模型用）
@@ -594,8 +610,29 @@ class UniLM_Mask(LM_Mask):
             )
 
         return self.attention_bias
-
-
+    def slice_inputs(self,inputs,key,index):
+        def take(inputs,key,index):
+            return ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
+        return [take(inputs,key,index),take(inputs,key+1,index)]
+    def get_new_inputs(self,inputs,key,xs,index=None):
+        if self.custom_position_ids:
+            return inputs[:key]+xs+[ops.expand_dims(index,0)]+inputs[key+2:]
+        return inputs[:key]+xs+inputs[key+2:]
+    def compute_cache_attention_bias(self, inputs=None,key=0,index=0):
+        
+        if self.cache_attention_bias==None:
+            self.cache_attention_bias=self.apply(
+                inputs=inputs[key+1],
+                name='Attention-Mask'
+            )
+        else:
+            return self.apply(
+                inputs=self.cache_attention_bias,
+                layer=TakeLayer,
+                axis=1,
+                arguments={'index': index},
+                name='TakeLayer'
+            )
 class BERT(Transformer):
     """构建BERT模型
     """
@@ -622,7 +659,8 @@ class BERT(Transformer):
         self.shared_segment_embeddings = shared_segment_embeddings
         if self.with_nsp and not self.with_pool:
             self.with_pool = True
-
+    def get_custom_position_ids(self):
+        return True
     def get_inputs(self):
         """BERT的输入是token_ids和segment_ids
         （但允许自行传入位置id，以实现一些特殊需求）
@@ -648,6 +686,64 @@ class BERT(Transformer):
             )
             inputs.append(p_in)
 
+        return inputs
+    
+    def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
+                                cross_cache_update_index=None,
+                                attention_mask=None,position_bias=None,
+            
+                                ):
+        x,caches = inputs[:]
+        z = self.layer_norm_conds[0]
+
+        attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
+        feed_forward_name = 'Transformer-%d-FeedForward' % index
+
+        # Self Attention
+        xi, x, arguments = x, [x, x, x,attention_mask,caches[0],self_cache_update_index], {'a_bias': True,'cache_update_index':True,'use_cache':True,}
+        x,cache = self.apply(
+            inputs=x,
+            arguments=arguments,
+            name=attention_name
+        )
+        caches[0] = cache
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % attention_name
+        )
+
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=x,
+            name=feed_forward_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % feed_forward_name
+        )
+
+        return [x,caches]
+    def get_cache_inputs(self,lengths:list):
+        x_in = self.apply(
+            layer=Input, shape=[lengths[0]], name='Input-Token-cache-'+str(lengths[1])
+        )
+        inputs = [x_in]
+
+        if self.segment_vocab_size > 0:
+            s_in = self.apply(
+                layer=Input,
+                shape=[lengths[1]],
+                name='Input-Segment-cache-'+str(lengths[1])
+            )
+            inputs.append(s_in)
+        
         return inputs
 
     def apply_embeddings(self, inputs):
@@ -812,7 +908,10 @@ class BERT(Transformer):
         """
         x = inputs
         z = self.layer_norm_conds[0]
-        outputs = [x]
+        if isinstance(x,list):
+            outputs = x
+        else:
+            outputs = [x]
 
         if self.with_pool:
             # Pooler部分（提取CLS向量）
@@ -1305,6 +1404,68 @@ class RoFormer(NEZHA):
     """旋转式位置编码的BERT模型
     链接：https://kexue.fm/archives/8265
     """
+    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
+        if self.cache_position_bias is None:
+
+            self.cache_position_bias =self.apply(
+                inputs=inputs[0],
+                name='Embedding-Rotary-Position'
+            )
+        if inputs!=None:
+            return None
+        self.length_cache_position_bias = self.apply(
+            inputs=self.cache_position_bias,
+            layer=TakeLayer,
+            axis=1,
+            arguments={'index': self_cache_update_index},
+            name='TakeLayer'
+        )
+        
+        return self.length_cache_position_bias
+
+    def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
+                                cross_cache_update_index=None,
+                                attention_mask=None,position_bias=None,
+            
+                                ):
+        x,caches = inputs[:]
+        z = self.layer_norm_conds[0]
+
+        attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
+        feed_forward_name = 'Transformer-%d-FeedForward' % index
+
+        # Self Attention
+        xi, x  = x, [x, x, x,attention_mask, position_bias,caches[0],self_cache_update_index]
+        arguments = {'a_bias': True,'cache_update_index':True,'use_cache':True,'p_bias': 'rotary'}
+        x,cache = self.apply(
+            inputs=x,
+            arguments=arguments,
+            name=attention_name
+        )
+        caches[0] = cache
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % attention_name
+        )
+
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=x,
+            name=feed_forward_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % feed_forward_name
+        )
+
+        return [x,caches]
     def apply_main_layers(self, inputs, index):
         """RoFormer的主体是基于Self-Attention的模块
         顺序：Att --> Add --> LN --> FFN --> Add --> LN
@@ -2761,12 +2922,12 @@ class T5_Decoder(LM_Mask, T5_Base):
         c_in = self.apply(
             layer=Input,
             shape=(lengths[0], self.hidden_size),
-            name='Input-Context-cache'
+            name='Input-Context-cache-'+str(lengths[1])
         )
         x_in = self.apply(
             layer=Input,
             shape=[lengths[1]],
-            name='Decoder-Input-Token-cache'
+            name='Decoder-Input-Token-cache-'+str(lengths[1])
         )
         return [c_in, x_in] 
     def compute_attention_bias(self, inputs=None):
@@ -2968,7 +3129,7 @@ class T5(T5_Base):
                                                     index_bias)
         y = self.cache_decoder([self.encoder.output,self.cache_decoder.inputs[1]])
         self.cache_t5 = keras.Model([self.encoder.inputs[0],self.cache_decoder.inputs[1]],y)
-        
+
         return self.cache_t5
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
