@@ -438,7 +438,6 @@ class SearchBase(Layer):
         super(SearchBase, self).__init__(**kwargs)
         self.k = k
         self.end_token=end_token
-        self.seed = int(np.random.get_state()[1][0])
     def get_config(self):
         config = {
             'k': self.k,
@@ -454,7 +453,7 @@ class SearchBase(Layer):
             # sure we have full precision here.
             x,
             1,
-            seed=self.seed ,
+            seed=np.random.randint(1,2147483648),
             dtype="int32",
         )
         

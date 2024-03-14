@@ -37,6 +37,7 @@ class Transformer(object):
         layers=None,  # 外部传入的Keras层
         prefix=None,  # 层名前缀
         name=None,  # 模型名称
+        segment_vocab_size=0,
         **kwargs
     ):
         if keep_tokens is not None:
@@ -44,6 +45,7 @@ class Transformer(object):
         if compound_tokens is not None:
             vocab_size += len(compound_tokens)
         self.vocab_size = vocab_size
+        self.segment_vocab_size = segment_vocab_size
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
         self.num_attention_heads = num_attention_heads
@@ -346,7 +348,7 @@ class Transformer(object):
                 layer=ToppSearch,
                 k=k,
                 end_token=self.end_token,
-                name='ToppSearchLayer'
+                name='SearchLayer'
             )
         elif mode=='topk':
             return self.apply(
@@ -354,7 +356,7 @@ class Transformer(object):
                 layer=TopkSearch,
                 k=k,
                 end_token=self.end_token,
-                name='TopkSearchLayer'
+                name='SearchLayer'
             )
         else:
             return self.apply(
@@ -362,7 +364,7 @@ class Transformer(object):
                 layer=GreedySearch,
                 k=k,
                 end_token=self.end_token,
-                name='GreedySearchLayer'
+                name='SearchLayer'
             )
 
     def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
@@ -480,7 +482,7 @@ class LM_Mask(object):
         #initial inputs and cache
 
         z = self.apply_embeddings(inputs)
-        #print(z)
+
         if not isinstance(z,list):
             z = [z]
         j = len(caches)//self.num_hidden_layers
@@ -518,7 +520,7 @@ class LM_Mask(object):
             xs = self.slice_inputs(inputs,key,index)
             self.custom_position_ids = self.get_custom_position_ids()
             new_inputs = self.get_new_inputs(inputs,key,xs,index)
-            #print(xs)
+
             z = self.apply_embeddings(new_inputs)
             
             if not isinstance(z,list):
@@ -537,14 +539,12 @@ class LM_Mask(object):
                 
                 caches[i*j:i*j+j]=cache
             
-            #print(z[1])
+
             o = self.apply_final_layers(z)
             
             index += 1
             search_in = [o,index,inputs[key],flags]
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
-            #print(index)
-            #print(ops.cast(inputs[key],'int32'))
             return (inputs, caches, index , flags)
         class WhileLayer(keras.Layer):
             def call(self, x):
@@ -575,16 +575,18 @@ class LM_Mask(object):
     def build_cache_model(self,input_lengths:list,end_token,
                           search_mode='greedy',k=1,progress_print=False,index_bias=0):
         
-
         inputs=self.get_cache_inputs(input_lengths)
-        out = self.cache_call(inputs,input_lengths,end_token,search_mode,k,progress_print,index_bias)
+        
+        out = self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
         model = keras.Model(inputs,out)
         inputs = []
         for modelin in model.inputs: 
             shape=keras.ops.shape(modelin)
             shape=[1 if t==None else t for t in shape]
             inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
-        self.cache_call(inputs,input_lengths,end_token)
+        self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
         
         return model
 class UniLM_Mask(LM_Mask):
@@ -2454,13 +2456,23 @@ class T5_Encoder(T5_Base):
             shape=(self.sequence_length,),
             name='Encoder-Input-Token'
         )
+        if self.segment_vocab_size > 0:
+            s_in = self.apply(
+                layer=Input,
+                shape=(self.sequence_length,),
+                name='Segment-Input-Token'
+            )
+            return [x_in,s_in]
         return x_in
 
     def apply_embeddings(self, inputs):
         """T5的embedding只有token embedding，
         并把relative position embedding准备好，待attention使用。
         """
-        x = inputs
+        if type(inputs)==list:
+            x,s = inputs[:]
+        else:
+            x = inputs
 
         x = self.apply(
             inputs=x,
@@ -2471,6 +2483,18 @@ class T5_Encoder(T5_Base):
             mask_zero=True,
             name='Embedding-Token'
         )
+        if self.segment_vocab_size > 0:
+            s = self.apply(
+                inputs=s,
+                layer=Embedding,
+                input_dim=self.segment_vocab_size,
+                output_dim=self.embedding_size,
+                embeddings_initializer='zeros',
+                name='Embedding-Segment'
+            )
+            x = self.apply(
+                inputs=[x, s], layer=Add, name='Embedding-Token-Segment'
+            )
         x = self.apply(
             inputs=x,
             layer=Dropout,
@@ -3128,7 +3152,7 @@ class T5(T5_Base):
                                                     progress_print,
                                                     index_bias)
         y = self.cache_decoder([self.encoder.output,self.cache_decoder.inputs[1]])
-        self.cache_t5 = keras.Model([self.encoder.inputs[0],self.cache_decoder.inputs[1]],y)
+        self.cache_t5 = keras.Model(self.encoder.inputs[:]+self.cache_decoder.inputs[1:],y)
 
         return self.cache_t5
 def extend_with_language_model(BaseModel):
@@ -3266,6 +3290,18 @@ class Misaka_encoder(GAU_alpha):
             mask_zero=True,
             name='Embedding-Token'
         )
+        if self.segment_vocab_size > 0:
+            s = self.apply(
+                inputs=s,
+                layer=Embedding,
+                input_dim=self.segment_vocab_size,
+                output_dim=self.embedding_size,
+                embeddings_initializer='zeros',
+                name='Embedding-Segment'
+            )
+            x = self.apply(
+                inputs=[x, s], layer=Add, name='Embedding-Token-Segment'
+            )
         x = self.apply(
             inputs=x,
             layer=Dropout,
