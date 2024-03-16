@@ -26,16 +26,16 @@ tokenizer = SpTokenizer('ChatYuan-keras/spiece.model', token_start=None, token_e
 #ckpt是为了兼容苏神的模型，对于新模型我们采用keras3的weights.h5格式存储权重
 t5 =build_transformer_model(
     config_path='ChatYuan-keras/config.json',
+    keras_weights_path='MisakaT5/T5weights.weights.h5',
     model='mt5.1.1',
     return_keras_model=False,
     with_lm='softmax',
     name='T5',
 )
-#build的时候不需要添加checkpoints_path,在load后用此方法加载
-t5.model.load_weights('ChatYuan-keras/T5weights.weights.h5')
+
 #构建cache模型
 cache_model=t5.build_cache_model(input_lengths,end_token=1,
-                       search_mode=search_mode,k=k,progress_print=True,index_bias=1)
+                       search_mode=search_mode,k=k,progress_print=True,index_bias=index_bias)
 
 #从bert4torch抄过来的example
 e_in=["帮我写一个请假条，我因为新冠不舒服，需要请假3天，请领导批准",
