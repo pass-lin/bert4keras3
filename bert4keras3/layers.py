@@ -3,11 +3,13 @@
 
 import numpy as np
 
-from bert4keras3.backend import keras, ops, is_tf_keras,K,tf
-from bert4keras3.backend import align, sequence_masking
+from bert4keras3.backend import keras, ops, is_tf_keras,K,tf,enable_flashatt
+if enable_flashatt:
+    from bert4keras3.backend import flash_mha
+from bert4keras3.backend import align, sequence_masking,backlib
 from bert4keras3.backend import recompute_grad,int_shape
 from bert4keras3.backend import attention_normalize,divide_no_nan
-from bert4keras3.backend import sinusoidal_embeddings
+from bert4keras3.backend import sinusoidal_embeddings,slices_index
 from bert4keras3.backend import apply_rotary_position_embeddings
 from keras import initializers, activations
 from keras.layers import *
@@ -27,7 +29,10 @@ class TakeLayer(Layer):
         return dict(list(base_config.items()) + list(config.items()))
     def call(self,inputs, **kwargs):
         index = kwargs.get('index') 
-        return ops.expand_dims(ops.take(inputs,index,self.axis),self.axis)
+        out = ops.expand_dims(ops.take(inputs,index,self.axis),self.axis)
+        if backlib=='torch':
+            return slices_index(out,index+1,1)
+        return out
     def compute_output_shape(self, input_shape):
         input_shape = list(input_shape)
         input_shape[self.axis]=1
@@ -637,6 +642,16 @@ class MultiHeadAttention(Layer):
                 vw = value_cache
         else:
             cache = None
+        
+        if enable_flashatt:
+            is_causal = False
+            if a_bias is not None:
+                is_causal = True
+            softmax_scale = 1.
+            if self.attention_scale:
+                softmax_scale = 1 / self.key_size**0.5
+            o = flash_mha(qw,kw,vw,softmax_scale=softmax_scale, is_causal=is_causal)
+            return o,[],[]
         # Attention
         a = ops.einsum('bjhd,bkhd->bhjk', qw, kw)
         # 处理位置编码
@@ -645,6 +660,7 @@ class MultiHeadAttention(Layer):
             a = a + ops.einsum('bjhd,jkd->bhjk', qw, position_bias)
         elif p_bias == 't5_relative':
             position_bias = ops.transpose(inputs[n], (2, 0, 1))
+            #print(a.shape,position_bias.shape)
             a = a + ops.expand_dims(position_bias, 0)
         # Attention（续）
         if self.attention_scale:
@@ -823,21 +839,40 @@ class GatedAttentionUnit(Layer):
         if p_bias == 'rotary':
             q, k = apply_rotary_position_embeddings(inputs[n], q, k)
         # Attention
+        if enable_flashatt and ops.shape(k)==ops.shape(v):
+            z = self.pay_flash_attention_to(q,k,v, a_bias)
+        else:
+            z = self.pay_attention_to(q,k,v,mask, a_bias)   
+        # 计算输出
+        if self.self_attention==False and self.factorization:
+            z = self.vW_dense(z)
+        o = self.o_dense(u * z)
+        return o
+    def pay_flash_attention_to(self, q,k,v, a_bias):
+        is_causal = False
+        if a_bias is not None:
+            is_causal = True
+        softmax_scale = 1.
+        if self.attention_scale:
+            softmax_scale = 1 / self.key_size**0.5
+        if ops.ndim(q)==3:
+            k = ops.expand_dims(k,2)
+            q = ops.expand_dims(q,2)
+            v = ops.expand_dims(v,2)
+        o = flash_mha(q,k,v,softmax_scale=softmax_scale, is_causal=is_causal)
+        return ops.squeeze(o,2)
+    def pay_attention_to(self, q,k,v,mask, a_bias):
         a = ops.einsum('bmd,bnd->bmn', q, k)
         if self.attention_scale:
             a = a / self.key_size**0.5
         A = attention_normalize(a, mask, -1, self.normalization, a_bias)
         if self.attention_dropout:
             A = self.dropout(A)
-        # 计算输出
         try:
             z=ops.einsum('bmn,bnd->bmd', A, v)
         except:
             pass
-        if self.self_attention==False and self.factorization:
-            z = self.vW_dense(z)
-        o = self.o_dense(u * z)
-        return o
+        return z
 
     def compute_mask(self, inputs, mask=None):
         if isinstance(mask, list):

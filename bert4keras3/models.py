@@ -2,7 +2,7 @@
 # 主要模型
 
 import numpy as np
-from bert4keras3.backend import tf,keras,backlib
+from bert4keras3.backend import tf,keras,backlib,lora_model
 from bert4keras3.layers import *
 from bert4keras3.snippets import insert_arguments
 from bert4keras3.snippets import delete_arguments
@@ -473,6 +473,16 @@ class LM_Mask(object):
             caches = self.initial_cache(inputs[:1])
             key = 0
         x = inputs[key]
+        
+        class start_index(keras.Layer):
+            def call(self,x):
+                z = x!=0
+                if index_bias>0:
+                    t = ops.ones([ops.shape(z)[0],index_bias],dtype=z.dtype)
+                    z = ops.slice_update(z,[0,0],t)
+                return ops.max(ops.sum(z,-1))-1
+        
+        
         length = input_lengths[key]
         self.cache_attention_bias=None
         self.cache_position_bias=None
@@ -494,26 +504,23 @@ class LM_Mask(object):
                                         attention_mask=self.cache_attention_bias,
                                         position_bias=self.cache_position_bias)
             z,cache = out[:-1],out[-1]
+            
             caches[index*j:index*j+j]=cache
         
-        class start_index(keras.Layer):
-            def call(self,x):
-                z = x!=0
-                if index_bias>0:
-                    t = ops.ones([ops.shape(z)[0],index_bias],dtype=z.dtype)
-                    z = ops.slice_update(z,[0,0],t)
-                return ops.max(ops.sum(z,-1))-1
+        
+        
         index = self.apply(
             inputs=x,
             layer=start_index,
             name='start_index'
         )
+        
         def cond(inputs, caches, index , flags):
             cond1 = ops.less(index,length-1)
             cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
             return ops.logical_and(cond1,cond2)
         
-        def body(inputs, caches, index , flags):
+        def body(inputs, caches, index , flags,cache_shape_torch=None):
             if progress_print:
                 
                 print('\r',index,end='')
@@ -529,7 +536,10 @@ class LM_Mask(object):
             position_bias = self.compute_cache_position_bias(self_cache_update_index = index) 
             
             for i in range(self.num_hidden_layers):
+                
                 layer_caches = caches[i*j:i*j+j]
+                if backlib=='torch':
+                    layer_caches[0]=ops.concatenate([layer_caches[0],ops.zeros(cache_shape_torch,dtype=layer_caches[0].dtype)],axis=2)
                 out=self.apply_main_cache_layers(z+[layer_caches], i,self_cache_update_index=index,
                                             cross_cache_update_index=None,
                                             attention_mask=attention_mask,
@@ -546,13 +556,18 @@ class LM_Mask(object):
             search_in = [o,index,inputs[key],flags]
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
             return (inputs, caches, index , flags)
+        num_hidden_layers = self.num_hidden_layers
         class WhileLayer(keras.Layer):
             def call(self, x):
                 inputs, caches, index =  x[:]
                 flags = ops.ones([ops.shape(caches[0])[0],1],dtype='bool')
                 if backlib=='torch':
+                    cache_shape_torch = list(ops.shape(caches[0]))
+                    cache_shape_torch[2] = 1
+                    for i in range(num_hidden_layers):
+                        caches[i*j]=slices_index(caches[i*j],index,2)
                     while cond(inputs, caches, index , flags):
-                        inputs, caches, index , flags = body(inputs, caches, index , flags)
+                        inputs, caches, index , flags = body(inputs, caches, index , flags,cache_shape_torch)
                     return (inputs, caches, index)
                 outs=ops.while_loop(
                     cond,
@@ -3639,6 +3654,7 @@ def build_transformer_model(
     model='bert',
     application='encoder',
     return_keras_model=True,
+    keras_weights_path=None,
     **kwargs
 ):
     """根据配置文件构建模型，可选加载checkpoint权重
@@ -3718,7 +3734,19 @@ def build_transformer_model(
             shape=[1 if t==None else t for t in shape]
             inputs.append(np.zeros(shape,modelin.dtype))
         transformer.model.predict(inputs,verbose=3)
-    
+        if keras_weights_path is not None:
+            transformer.model.load_weights(keras_weights_path, skip_mismatch=True)
+        if lora_model:
+            
+            def enable_lora(t):
+                if isinstance(t,keras.layers.Embedding) or isinstance(t,keras.layers.Dense):
+                    t.enable_lora(True)
+            for layer in transformer.model.layers:
+                layer.trainable=False
+                enable_lora(layer)
+                for kid in dir (layer):
+                    t = getattr(layer,kid)
+                    enable_lora(t)
     if checkpoint_path is not None:
         transformer.load_weights_from_checkpoint(checkpoint_path)
 

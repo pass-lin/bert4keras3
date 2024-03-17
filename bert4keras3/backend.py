@@ -8,13 +8,24 @@ import numpy as np
 import tensorflow as tf
 from functools import wraps
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
+lora_model = strtobool(os.environ.get('ENABLE_LORA', '0'))
+#jax使用flash参考https://github.com/nshepperd/flash_attn_jax/releases这里安装flash
+enable_flashatt = strtobool(os.environ.get('FLASH_ATTN', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
 backlib=os.environ["KERAS_BACKEND"]
 if backlib=='tfkeras':
     is_tf_keras = True
+    if enable_flashatt:
+        raise('tensorflow not support flash-attention')
 elif backlib=='torch':
     import torch
+    if enable_flashatt:
+        from flash_attn import flash_attn_func
+        def flash_mha(q,k,v,softmax_scale=None, is_causal=False, window_size=(-1,-1)):
+            return flash_attn_func(q, k, v, softmax_scale=softmax_scale, causal=is_causal,window_size=window_size)
 elif backlib=='jax':
+    if enable_flashatt:
+        from flash_attn_jax import flash_mha
     import jax  
 if is_tf_keras:
     sys.modules['keras'] = tf.keras
@@ -534,7 +545,10 @@ if use_keras_2:
 else:
     sys.modules['keras.ops']=ops
 
-
+def slices_index(x,index,axis):
+    shape = list(ops.shape(x))
+    shape[axis] = index
+    return ops.slice(x,ops.zeros_like(shape),shape)
 custom_objects = {
     'gelu_erf': gelu_erf,
     'gelu_tanh': ops.gelu,
