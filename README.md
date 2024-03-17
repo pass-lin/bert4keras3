@@ -59,7 +59,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 - <strong>GAU-ALPHA</strong>: https://github.com/ZhuiyiTechnology/GAU-alpha
 
       
-### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过model.load_weights方法读取权重，建议使用keras3加载：      
+### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
 - <strong>自行转换的ChatYuan Keras3版本</strong>:链接：https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  
 
 <strong>注意事项</strong>
@@ -75,3 +75,8 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 [roformer/roformer-v2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_simroformer.py)的cache支持，用法和t5一样，example里只是测试一下与greedy是否一致
 
 
+## 3.17号更新，发布1.2版本  
+增加了对weights.h5的读取支持  
+增加了lora支持，可以通过设置os.environ["ENABLE_LORA"]='1' 启动lora训练，注意的是除了lora之外的参数全部会被冻结  
+增加了flash-attention支持，可以通过设置os.environ["FLASH_ATTN"]='1'使用flash-attention  
+但是需要注意的是，tensorflow不支持。而jax在https://github.com/nshepperd/flash_attn_jax/releases下载，torch则是https://github.com/Dao-AILab/flash-attention  
