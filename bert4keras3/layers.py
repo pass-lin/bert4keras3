@@ -180,12 +180,37 @@ keras.layers.GlobalAveragePooling1D = GlobalAveragePooling1D
 keras.layers.GlobalMaxPooling1D = GlobalMaxPooling1D
 
 
+def Input(
+    shape=None,
+    batch_size=None,
+    dtype=None,
+    sparse=None,
+    batch_shape=None,
+    name=None,
+    tensor=None,
+):
+    if dtype==None:
+        dtype='float32'
+    return keras.Input(
+        shape=shape,
+        batch_size=batch_size,
+        dtype=dtype,
+        sparse=sparse,
+        batch_shape=batch_shape,
+        name=name,
+        tensor=tensor,
+    )
+        
+        
 class Embedding(keras.layers.Embedding):
-    """拓展Embedding层
-    """
+    #def __init__(self, **kwargs):
+    #    super(Embedding, self).__init__(dtype='float32',**kwargs)
+
+    
     def compute_mask(self, inputs, mask=None):
         """为了适配T5，保证第一个token不被mask
         """
+        #print(inputs)
         if ops.ndim(inputs) == 2:
             mask = super(Embedding, self).compute_mask(inputs, mask)
             if mask is not None:
@@ -200,6 +225,7 @@ class Embedding(keras.layers.Embedding):
         则等价于普通Embedding层；如果为dense，则等价于无bias的Dense层。
         """
         if mode == 'embedding':
+            
             return super(Embedding, self).call(inputs)
         else:
             kernel = ops.transpose(self.embeddings)
@@ -622,6 +648,7 @@ class MultiHeadAttention(Layer):
         if a_bias:
             a_bias = inputs[n]
             n += 1
+        
         if p_bias == 'rotary':
             qw, kw = apply_rotary_position_embeddings(inputs[n], qw, kw)
             n += 1
@@ -1116,7 +1143,7 @@ class RelativePositionEmbedding(Layer):
 
     def call(self, inputs):
         pos_ids = self.compute_position_ids(inputs)
-        return ops.take(self.embeddings, pos_ids,axis=0)
+        return ops.take(self.embeddings,ops.cast(pos_ids,'int32'),axis=0)
 
     def compute_position_ids(self, inputs):
         q, v = inputs
@@ -1397,7 +1424,7 @@ class Loss(Layer):
 
     def call(self, inputs, mask=None):
         loss = self.compute_loss(inputs, mask)
-        self.add_loss(loss, inputs=inputs)
+        self.add_loss(loss)
         if self.output_axis is None:
             return inputs
         elif isinstance(self.output_axis, list):

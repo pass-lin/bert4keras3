@@ -37,7 +37,7 @@ class Transformer(object):
         layers=None,  # 外部传入的Keras层
         prefix=None,  # 层名前缀
         name=None,  # 模型名称
-        segment_vocab_size=0,
+        
         **kwargs
     ):
         if keep_tokens is not None:
@@ -45,7 +45,7 @@ class Transformer(object):
         if compound_tokens is not None:
             vocab_size += len(compound_tokens)
         self.vocab_size = vocab_size
-        self.segment_vocab_size = segment_vocab_size
+        
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
         self.num_attention_heads = num_attention_heads
@@ -102,7 +102,7 @@ class Transformer(object):
             layer_norm_cond_hidden_size,
             layer_norm_cond_hidden_act or 'linear',
         ]
-        # Call
+        
         outputs = self.call(inputs)
         self.set_outputs(outputs)
         # Model
@@ -397,6 +397,7 @@ class LM_Mask(object):
 
             self.attention_bias = self.apply(
                 inputs=self.inputs[0],
+                dtype='float32',
                 layer=Lambda,
                 function=lm_mask,
                 name='Attention-Mask'
@@ -613,6 +614,44 @@ class UniLM_Mask(LM_Mask):
         """通过idxs序列的比较来得到对应的mask
         """
         if self.attention_bias is None:
+
+            def unilm_mask(s):
+                idxs = ops.cumsum(s, axis=1)
+                mask = idxs[:, None, :] <= idxs[:, :, None]
+                return mask
+
+            self.attention_bias = self.apply(
+                inputs=self.inputs[1],
+                layer=Lambda,
+                function=unilm_mask,
+                dtype='float32',
+                name='Attention-Mask'
+            )
+
+        return self.attention_bias
+    def slice_inputs(self,inputs,key,index):
+        def take(inputs,key,index):
+            return ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
+        return [take(inputs,key,index),take(inputs,key+1,index)]
+    def get_new_inputs(self,inputs,key,xs,index=None):
+        if self.custom_position_ids:
+            return inputs[:key]+xs+[ops.expand_dims(index,0)]+inputs[key+2:]
+        return inputs[:key]+xs+inputs[key+2:]
+    def compute_cache_attention_bias(self, inputs=None,key=0,index=0):
+        
+        if self.cache_attention_bias==None:
+            self.cache_attention_bias=self.apply(
+                inputs=inputs[key+1],
+                name='Attention-Mask'
+            )
+        else:
+            return self.apply(
+                inputs=self.cache_attention_bias,
+                layer=TakeLayer,
+                axis=1,
+                arguments={'index': index},
+                name='TakeLayer'
+            )
 
             def unilm_mask(s):
                 idxs = ops.cumsum(s, axis=1)
@@ -2463,6 +2502,11 @@ class T5_Base(Transformer):
 class T5_Encoder(T5_Base):
     """Google的T5模型（Encoder）
     """
+    def __init__(self,segment_size=0, **kwargs):
+        super(T5_Encoder, self).__init__(**kwargs)
+        self.segment_vocab_size=segment_size
+        
+
     def get_inputs(self):
         """T5的Encoder的输入只有token_ids
         """
@@ -2657,17 +2701,18 @@ class T5_Encoder(T5_Base):
             self.position_bias = p
 
         return self.position_bias
-
+    
 
 class T5_Decoder(LM_Mask, T5_Base):
     """Google的T5模型（Decoder）
     """
-    def __init__(self, with_lm=True, cross_position_bias=True,logit_scale=True, **kwargs):
+    def __init__(self, with_lm=True, cross_position_bias=True,logit_scale=True, decoder_sequence_length=None,**kwargs):
         super(T5_Decoder, self).__init__(**kwargs)
         self.with_lm = with_lm
         self.cross_position_bias = cross_position_bias
         self.logit_scale=logit_scale
         self.is_seq2seq = True
+        self.decoder_sequence_length=decoder_sequence_length
     def get_inputs(self):
         """T5的Decoder的输入为context序列和token_ids
         """
@@ -2678,7 +2723,7 @@ class T5_Decoder(LM_Mask, T5_Base):
         )
         x_in = self.apply(
             layer=Input,
-            shape=(self.sequence_length,),
+            shape=(self.decoder_sequence_length,),
             name='Decoder-Input-Token'
         )
         return [c_in, x_in]
@@ -3170,6 +3215,19 @@ class T5(T5_Base):
         self.cache_t5 = keras.Model(self.encoder.inputs[:]+self.cache_decoder.inputs[1:],y)
 
         return self.cache_t5
+class MisakaT5(T5):
+    """Google的T5模型（Encoder-Decoder）
+    """
+    def __init__(self, **kwargs):
+        super(T5, self).__init__(**kwargs)
+        kwargs['layers'] = self.layers
+        e_name, d_name = 'Encoder', 'Decoder'
+        if 'name' in kwargs:
+            e_name = '%s_%s' % (kwargs['name'], e_name)
+            d_name = '%s_%s' % (kwargs['name'], d_name)
+            del kwargs['name']  # 防止重复传参
+        self._encoder = MisakaT5_Encoder(name=e_name, **kwargs)
+        self._decoder = MisakaT5_Decoder(name=d_name, **kwargs)
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
     """
@@ -3280,6 +3338,289 @@ class GAU_alpha(RoFormerV2):
         return mapping
 
 
+class MisakaT5_Encoder(T5_Encoder):
+    def apply_main_layers(self, inputs, index):
+        """MisakaT5的Encoder的主体是基于Self-Attention的模块
+        顺序：LN --> Att --> Add --> LN --> FFN --> Add
+        """
+        x = inputs
+        z = self.layer_norm_conds[0]
+
+        attention_name = 'Encoder-Transformer-%d-MultiHeadSelfAttention' % index
+        feed_forward_name = 'Encoder-Transformer-%d-FeedForward' % index
+        attention_mask = self.compute_attention_bias(index)
+        position_bias = self.compute_position_bias(x)
+
+        # Self Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            conditional=(z is not None),
+            hidden_units=self.layer_norm_conds[1],
+            hidden_activation=self.layer_norm_conds[2],
+            hidden_initializer=self.initializer,
+            name='%s-Norm' % attention_name
+        )
+        x = self.apply(
+            inputs=[x, x, x, position_bias],
+            layer=MultiHeadAttention,
+            arguments={'p_bias': 'rotary'},
+            heads=self.num_attention_heads,
+            head_size=self.attention_head_size,
+            out_dim=self.hidden_size,
+            key_size=self.attention_key_size,
+            use_bias=False,
+            attention_scale=False,
+            attention_dropout=self.attention_dropout_rate,
+            kernel_initializer=self.initializer,
+            name=attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            conditional=(z is not None),
+            hidden_units=self.layer_norm_conds[1],
+            hidden_activation=self.layer_norm_conds[2],
+            hidden_initializer=self.initializer,
+            name='%s-Norm' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=FeedForward,
+            units=self.intermediate_size,
+            activation=self.hidden_act,
+            use_bias=False,
+            kernel_initializer=self.initializer,
+            name=feed_forward_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+
+        return x
+    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
+        if self.cache_position_bias is None:
+
+            self.cache_position_bias =self.apply(
+                inputs=inputs[0],
+                name='Embedding-Rotary-Position'
+            )
+        if inputs!=None:
+            return None
+        self.length_cache_position_bias = self.apply(
+            inputs=self.cache_position_bias,
+            layer=TakeLayer,
+            axis=1,
+            arguments={'index': self_cache_update_index},
+            name='TakeLayer'
+        )
+        
+        return self.length_cache_position_bias
+    def compute_position_bias(self, inputs=None):
+        """Sinusoidal位置编码（直接返回）
+        """
+        if self.position_bias is None:
+
+            if self.custom_position_ids:
+                x = [inputs, self.inputs[2]]
+            else:
+                x = inputs
+
+            self.position_bias = self.apply(
+                inputs=x,
+                layer=SinusoidalPositionEmbedding,
+                output_dim=self.attention_key_size,
+                merge_mode='zero',
+                custom_position_ids=self.custom_position_ids,
+                name='Embedding-Rotary-Position'
+            )
+
+        return self.position_bias
+class MisakaT5_Decoder(T5_Decoder):
+    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
+        if self.cache_position_bias is None:
+
+            self.cache_position_bias =self.apply(
+                inputs=inputs[0],
+                name='Embedding-Rotary-Position'
+            )
+        if inputs!=None:
+            return None
+        self.length_cache_position_bias = self.apply(
+            inputs=self.cache_position_bias,
+            layer=TakeLayer,
+            axis=1,
+            arguments={'index': self_cache_update_index},
+            name='TakeLayer'
+        )
+        
+        return self.length_cache_position_bias
+    def compute_position_bias(self, inputs=None):
+        """Sinusoidal位置编码（直接返回）
+        """
+        if self.position_bias is None:
+
+            if self.custom_position_ids:
+                x = [inputs, self.inputs[2]]
+            else:
+                x = inputs
+
+            self.position_bias = self.apply(
+                inputs=x,
+                layer=SinusoidalPositionEmbedding,
+                output_dim=self.attention_key_size,
+                merge_mode='zero',
+                custom_position_ids=self.custom_position_ids,
+                name='Embedding-Rotary-Position'
+            )
+
+        return self.position_bias
+    def apply_main_layers(self, inputs, index):
+        """T5的Decoder主体是基于Self-Attention、Cross-Attention的模块
+        顺序：LN --> Att1 --> Add --> LN --> Att2 --> Add -->  LN --> FFN --> Add
+        """
+        c, x = inputs
+        z = self.layer_norm_conds[0]
+
+        self_attention_name = 'Decoder-Transformer-%d-MultiHeadSelfAttention' % index
+        cross_attention_name = 'Decoder-Transformer-%d-MultiHeadCrossAttention' % index
+        feed_forward_name = 'Decoder-Transformer-%d-FeedForward' % index
+        attention_mask = self.compute_attention_bias(index)
+        position_bias = self.compute_position_bias(x)
+
+        # Self Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            conditional=(z is not None),
+            hidden_units=self.layer_norm_conds[1],
+            hidden_activation=self.layer_norm_conds[2],
+            hidden_initializer=self.initializer,
+            name='%s-Norm' % self_attention_name
+        )
+        x = self.apply(
+            inputs=[x, x, x, attention_mask, position_bias],
+            layer=MultiHeadAttention,
+            arguments={
+                'a_bias': True,
+                'p_bias': 'rotary'
+            },
+            heads=self.num_attention_heads,
+            head_size=self.attention_head_size,
+            out_dim=self.hidden_size,
+            key_size=self.attention_key_size,
+            use_bias=False,
+            attention_scale=False,
+            attention_dropout=self.attention_dropout_rate,
+            kernel_initializer=self.initializer,
+            name=self_attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % self_attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % self_attention_name
+        )
+
+        # Cross Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            conditional=(z is not None),
+            hidden_units=self.layer_norm_conds[1],
+            hidden_activation=self.layer_norm_conds[2],
+            hidden_initializer=self.initializer,
+            name='%s-Norm' % cross_attention_name
+        )
+
+        inputs = [x, c, c]
+        arguments = {'a_bias': None, 'p_bias': None}
+        x = self.apply(
+            inputs=inputs,
+            layer=MultiHeadAttention,
+            arguments=arguments,
+            heads=self.num_attention_heads,
+            head_size=self.attention_head_size,
+            out_dim=self.hidden_size,
+            key_size=self.attention_key_size,
+            use_bias=False,
+            attention_scale=False,
+            attention_dropout=self.attention_dropout_rate,
+            kernel_initializer=self.initializer,
+            name=cross_attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % cross_attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % cross_attention_name
+        )
+
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            layer=LayerNormalization,
+            zero_mean=False,
+            offset=False,
+            epsilon=1e-6,
+            conditional=(z is not None),
+            hidden_units=self.layer_norm_conds[1],
+            hidden_activation=self.layer_norm_conds[2],
+            hidden_initializer=self.initializer,
+            name='%s-Norm' % feed_forward_name
+        )
+        x = self.apply_ffn_layer(x,feed_forward_name)
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+
+        return [c, x]
 class Misaka_encoder(GAU_alpha):
     def get_inputs(self):
         """Misaka的Encoder的输入只有token_ids
@@ -3422,9 +3763,10 @@ class Misaka_encoder(GAU_alpha):
 class Misaka_decoder(LM_Mask,GAU_alpha):
     """Misaka模型（Decoder）
     """
-    def __init__(self, with_lm=True, **kwargs):
+    def __init__(self, with_lm=True,decoder_sequence_length=None, **kwargs):
         super(Misaka_decoder, self).__init__(**kwargs)
         self.with_lm = with_lm
+        self.decoder_sequence_length = decoder_sequence_length
     def apply_embeddings(self, inputs):
         c, x = inputs
 
@@ -3463,7 +3805,7 @@ class Misaka_decoder(LM_Mask,GAU_alpha):
         )
         x_in = self.apply(
             layer=Input,
-            shape=(self.sequence_length,),
+            shape=(self.decoder_sequence_length,),
             name='Decoder-Input-Token'
         )
         return [c_in, x_in]
@@ -3700,6 +4042,7 @@ def build_transformer_model(
         'mt5.1.1_encoder': T5_Encoder,
         'mt5.1.1_decoder': T5_Decoder,
         'misaka':Misaka,
+        'misakat5':MisakaT5,
     }
 
     if is_string(model):
@@ -3739,8 +4082,10 @@ def build_transformer_model(
         if lora_model:
             
             def enable_lora(t):
-                if isinstance(t,keras.layers.Embedding) or isinstance(t,keras.layers.Dense):
-                    t.enable_lora(True)
+                if isinstance(t,keras.layers.Embedding) :
+                    t.enable_lora(kwargs['attention_head_size']*2)
+                elif irsinstance(t,keas.layers.Dense):
+                    t.enable_lora(kwargs['attention_head_size'])
             for layer in transformer.model.layers:
                 layer.trainable=False
                 enable_lora(layer)
