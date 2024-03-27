@@ -415,7 +415,8 @@ class LM_Mask(object):
                 inputs=self.cache_attention_bias,
                 layer=TakeLayer,
                 arguments={'index': index},
-                name='TakeLayer'
+                axis=0,
+                name='TakeLayer2'
             )
     def initial_cache(self,inputs):
         caches=[]
@@ -521,14 +522,15 @@ class LM_Mask(object):
             cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
             return ops.logical_and(cond1,cond2)
         
-        def body(inputs, caches, index , flags,cache_shape_torch=None):
+        def body(inputs, caches, index , flags):
             if progress_print:
                 
                 print('\r',index,end='')
             xs = self.slice_inputs(inputs,key,index)
             self.custom_position_ids = self.get_custom_position_ids()
             new_inputs = self.get_new_inputs(inputs,key,xs,index)
-
+            if self.custom_position_ids:
+                new_inputs += [ops.reshape(index,[-1,1])]
             z = self.apply_embeddings(new_inputs)
             
             if not isinstance(z,list):
@@ -539,8 +541,6 @@ class LM_Mask(object):
             for i in range(self.num_hidden_layers):
                 
                 layer_caches = caches[i*j:i*j+j]
-                if backlib=='torch':
-                    layer_caches[0]=ops.concatenate([layer_caches[0],ops.zeros(cache_shape_torch,dtype=layer_caches[0].dtype)],axis=2)
                 out=self.apply_main_cache_layers(z+[layer_caches], i,self_cache_update_index=index,
                                             cross_cache_update_index=None,
                                             attention_mask=attention_mask,
@@ -563,12 +563,8 @@ class LM_Mask(object):
                 inputs, caches, index =  x[:]
                 flags = ops.ones([ops.shape(caches[0])[0],1],dtype='bool')
                 if backlib=='torch':
-                    cache_shape_torch = list(ops.shape(caches[0]))
-                    cache_shape_torch[2] = 1
-                    for i in range(num_hidden_layers):
-                        caches[i*j]=slices_index(caches[i*j],index,2)
                     while cond(inputs, caches, index , flags):
-                        inputs, caches, index , flags = body(inputs, caches, index , flags,cache_shape_torch)
+                        inputs, caches, index , flags = body(inputs, caches, index , flags)
                     return (inputs, caches, index)
                 outs=ops.while_loop(
                     cond,
@@ -788,7 +784,7 @@ class BERT(Transformer):
         return [x,caches]
     def get_cache_inputs(self,lengths:list):
         x_in = self.apply(
-            layer=Input, shape=[lengths[0]], name='Input-Token-cache-'+str(lengths[1])
+            layer=Input, shape=[lengths[1]], name='Input-Token-cache-'+str(lengths[1])
         )
         inputs = [x_in]
 
@@ -3131,8 +3127,11 @@ class T5_Decoder(LM_Mask, T5_Base):
         p = position_bias
         if self.p_bias == 't5_relative':
             p = position_bias[0]
+            inputs = [x, x, x, attention_mask,caches[0],self_cache_update_index,p]
+        else:
+            inputs = [x, x, x, attention_mask,p,caches[0],self_cache_update_index]
         x,cache_self = self.apply(
-            inputs=[x, x, x, attention_mask,caches[0],self_cache_update_index,p],
+            inputs=inputs,
             arguments=arguments,
             name=self_attention_name
         )
@@ -3347,24 +3346,6 @@ class MisakaT5_Encoder(T5_Encoder):
     def __init__(self, **kwargs):
         super( MisakaT5_Encoder, self).__init__(**kwargs)
         self.p_bias = 'rotary'
-    def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
-        if self.cache_position_bias is None:
-
-            self.cache_position_bias =self.apply(
-                inputs=inputs[0],
-                name='Embedding-Rotary-Position'
-            )
-        if inputs!=None:
-            return None
-        self.length_cache_position_bias = self.apply(
-            inputs=self.cache_position_bias,
-            layer=TakeLayer,
-            axis=1,
-            arguments={'index': self_cache_update_index},
-            name='TakeLayer'
-        )
-        
-        return self.length_cache_position_bias
     def compute_position_bias(self, inputs=None):
         """Sinusoidal位置编码（直接返回）
         """
@@ -3393,7 +3374,7 @@ class MisakaT5_Decoder(T5_Decoder):
         if self.cache_position_bias is None:
 
             self.cache_position_bias =self.apply(
-                inputs=inputs[0],
+                inputs=inputs[1],
                 name='Embedding-Rotary-Position'
             )
         if inputs!=None:
@@ -3414,7 +3395,7 @@ class MisakaT5_Decoder(T5_Decoder):
         if self.position_bias is None:
 
             x, c = inputs[:]
-
+           
             self.position_bias = self.apply(
                 inputs=x,
                 layer=SinusoidalPositionEmbedding,

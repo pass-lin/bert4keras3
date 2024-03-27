@@ -29,9 +29,8 @@ class TakeLayer(Layer):
         return dict(list(base_config.items()) + list(config.items()))
     def call(self,inputs, **kwargs):
         index = kwargs.get('index') 
+        att = kwargs.get('att')
         out = ops.expand_dims(ops.take(inputs,index,self.axis),self.axis)
-        if backlib=='torch':
-            return slices_index(out,index+1,1)
         return out
     def compute_output_shape(self, input_shape):
         input_shape = list(input_shape)
@@ -641,6 +640,7 @@ class MultiHeadAttention(Layer):
               返回o.shape=(batch_size, seq_len, heads, head_size)。
         """
         (qw, kw, vw), n = inputs[:3], 3
+        
         q_mask, v_mask = mask
         a_bias, p_bias = kwargs.get('a_bias'), kwargs.get('p_bias')
         is_cache_update_index = kwargs.get('cache_update_index')
@@ -650,6 +650,8 @@ class MultiHeadAttention(Layer):
             n += 1
         
         if p_bias == 'rotary':
+            
+            #print(inputs[n].shape, qw.shape, kw.shape)
             qw, kw = apply_rotary_position_embeddings(inputs[n], qw, kw)
             n += 1
         if use_cache:
@@ -661,6 +663,7 @@ class MultiHeadAttention(Layer):
                 cache_update_index = inputs[n]
                 n += 1
                 start = [0, cache_update_index, 0, 0]
+                #print(key_cache.shape, start, kw.shape)
                 kw = ops.slice_update(key_cache, start, kw)
                 vw = ops.slice_update(value_cache, start, vw)
                 cache = ops.stack((kw, vw), axis=1)
@@ -699,6 +702,7 @@ class MultiHeadAttention(Layer):
         if self.attention_dropout:
             A = self.dropout(A)
         # 完成输出
+
         o = ops.einsum('bhjk,bkhd->bjhd', A, vw)
         if p_bias == 'typical_relative':
             o = o + ops.einsum('bhjk,jkd->bjhd', A, position_bias)
@@ -1078,6 +1082,7 @@ class SinusoidalPositionEmbedding(Layer):
         self.custom_position_ids = custom_position_ids
 
     def call(self, inputs):
+        
         """如果custom_position_ids，那么第二个输入为自定义的位置id
         """
         if self.custom_position_ids:
@@ -1090,7 +1095,7 @@ class SinusoidalPositionEmbedding(Layer):
             position_ids = ops.arange(0, seq_len, dtype=K.floatx())[None]
 
         embeddings = sinusoidal_embeddings(position_ids, self.output_dim)
-
+        
         if self.merge_mode == 'add':
             return inputs + embeddings
         elif self.merge_mode == 'mul':
