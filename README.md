@@ -79,6 +79,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 | | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|
 | | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) 提取码：ukep|  √|
 | | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) 提取码：1so0|  √|
+| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) 提取码：2epu|  √|
 
 
 
