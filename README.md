@@ -37,30 +37,40 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 ## 权重
 
 ### 兼容bert4keras支持加载的权重，你可以在本来bert4keras支持的tf.keras、tf1.15-tf2.15和keras3加载：  
-- <strong>Google原版bert</strong>: https://github.com/google-research/bert
-- <strong>brightmart版roberta</strong>: https://github.com/brightmart/roberta_zh
-- <strong>哈工大版roberta</strong>: https://github.com/ymcui/Chinese-BERT-wwm
-- <strong>Google原版albert</strong><sup><a href="https://github.com/bojone/bert4keras/issues/29#issuecomment-552188981">[例子]</a></sup>: https://github.com/google-research/ALBERT
-- <strong>brightmart版albert</strong>: https://github.com/brightmart/albert_zh
-- <strong>转换后的albert</strong>: https://github.com/bojone/albert_zh
-- <strong>华为的NEZHA</strong>: https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-TensorFlow
-- <strong>华为的NEZHA-GEN</strong>: https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-Gen-TensorFlow
-- <strong>苏神自研语言模型</strong>: https://github.com/ZhuiyiTechnology/pretrained-models
-- <strong>T5模型</strong>: https://github.com/google-research/text-to-text-transfer-transformer
-- <strong>GPT_OpenAI</strong>: https://github.com/bojone/CDial-GPT-tf
-- <strong>GPT2_ML</strong>: https://github.com/imcaspar/gpt2-ml
-- <strong>Google原版ELECTRA</strong>: https://github.com/google-research/electra
-- <strong>哈工大版ELECTRA</strong>: https://github.com/ymcui/Chinese-ELECTRA
-- <strong>CLUE版ELECTRA</strong>: https://github.com/CLUEbenchmark/ELECTRA
-- <strong>LaBSE（多国语言BERT）</strong>: https://github.com/bojone/labse
-- <strong>Chinese-GEN项目下的模型</strong>: https://github.com/bojone/chinese-gen
-- <strong>T5.1.1</strong>: https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511
-- <strong>Multilingual T5</strong>: https://github.com/google-research/multilingual-t5/
-- <strong>GAU-ALPHA</strong>: https://github.com/ZhuiyiTechnology/GAU-alpha
 
-      
+
+
+
+
+  | 模型分类| 模型名称 |  权重链接|
+| bert/roberta| Google原版bert|  https://github.com/google-research/bert|
+| |brightmart版roberta |https://github.com/brightmart/roberta_zh |
+| | 哈工大版roberta| https://github.com/ymcui/Chinese-BERT-wwm|
+| | 追一开源bert|https://github.com/ZhuiyiTechnology/pretrained-models |
+| |LaBSE（多国语言BERT） | https://github.com/bojone/labse|
+|albert |谷歌albert |https://github.com/google-research/ALBERT |
+| | brightmart版albert| https://github.com/brightmart/albert_zh|
+| |苏神转换后的albert |https://github.com/bojone/albert_zh |
+| NEZHA|双向NEZHA |https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-TensorFlow |
+| | 单向NEZHA| https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-Gen-TensorFlow|
+|T5 |谷歌T5 | https://github.com/google-research/text-to-text-transfer-transformer|
+| | MT5| https://github.com/google-research/text-to-text-transfer-transformer |
+| | 苏神T5-pegasus| https://github.com/ZhuiyiTechnology/t5-pegasus|
+| | T5.1.1|https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511 |
+|ELECTRA |Google原版ELECTRA |https://github.com/google-research/electra |
+| | 哈工大版ELECTRA| https://github.com/ymcui/Chinese-ELECTRA |
+| | CLUE版ELECTRA| https://github.com/CLUEbenchmark/ELECTRA|
+|GPT-oai | GPT_OpenAI| https://github.com/bojone/CDial-GPT-tf|
+| GPT2-ML|  GPT2-ML|  https://github.com/imcaspar/gpt2-ml|
+| GAU| GAU-ALPHA|https://github.com/ZhuiyiTechnology/GAU-alpha |
+
+
+
 ### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
-- <strong>自行转换的ChatYuan Keras3版本</strong>:链接：https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  
+
+  | 模型分类| 模型名称 |  权重链接|
+| T5| ChatYuan|  [https://github.com/google-research/bert](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  )|  
+
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。
