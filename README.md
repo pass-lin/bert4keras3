@@ -43,6 +43,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 
   | 模型分类| 模型名称 |  权重链接|
+  | -------------- | -------------------------- | ------------------------------------------------------------ |
 | bert/roberta| Google原版bert|  https://github.com/google-research/bert|
 | |brightmart版roberta |https://github.com/brightmart/roberta_zh |
 | | 哈工大版roberta| https://github.com/ymcui/Chinese-BERT-wwm|
@@ -69,6 +70,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 ### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
 
   | 模型分类| 模型名称 |  权重链接|
+  | -------------- | -------------------------- | ------------------------------------------------------------ |
 | T5| ChatYuan|  [https://github.com/google-research/bert](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  )|  
 
 
