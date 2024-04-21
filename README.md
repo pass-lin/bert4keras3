@@ -44,29 +44,29 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
   | 模型分类| 模型名称 |  权重链接|支持kvcache 生成|
   | -------------- | -------------------------- | ------------------------------------------------------------ |-- |
-| bert/roberta| Google原版bert|  https://github.com/google-research/bert|√|
-| |brightmart版roberta |https://github.com/brightmart/roberta_zh |√|
-| | 哈工大版roberta| https://github.com/ymcui/Chinese-BERT-wwm|√|
-| | 追一开源bert|https://github.com/ZhuiyiTechnology/pretrained-models |√|
-| |LaBSE（多国语言BERT） | https://github.com/bojone/labse|√|
-|albert |谷歌albert |https://github.com/google-research/ALBERT |x|
-| | brightmart版albert| https://github.com/brightmart/albert_zh|x|
-| |苏神转换后的albert |https://github.com/bojone/albert_zh |x|
-| NEZHA|双向NEZHA |https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-TensorFlow |x|
-| | 单向NEZHA| https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-Gen-TensorFlow|x|
-|T5 |谷歌T5 | https://github.com/google-research/text-to-text-transfer-transformer|√|
-| | MT5| https://github.com/google-research/text-to-text-transfer-transformer |√|
-| | 苏神T5-pegasus| https://github.com/ZhuiyiTechnology/t5-pegasus|√|
-| | T5.1.1|https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511 |√|
-|ELECTRA |Google原版ELECTRA |https://github.com/google-research/electra |x|
-| | 哈工大版ELECTRA| https://github.com/ymcui/Chinese-ELECTRA |x|
-| | CLUE版ELECTRA| https://github.com/CLUEbenchmark/ELECTRA|x|
-|GPT-oai | GPT_OpenAI| https://github.com/bojone/CDial-GPT-tf|x|
-| GPT2-ML|  GPT2-ML|  https://github.com/imcaspar/gpt2-ml|x|
-| GAU| GAU-ALPHA|https://github.com/ZhuiyiTechnology/GAU-alpha |x|
-| Roformer| 苏神原版roformer|https://github.com/ZhuiyiTechnology/roformer |√|
-| | roformer-sim|https://github.com/ZhuiyiTechnology/roformer-sim |√|
-|Roformerv2| 苏神原版roformer-v2|https://github.com/ZhuiyiTechnology/roformer-v2 |√|
+| bert/roberta| Google原版bert|[github](https://github.com/google-research/bert)|√|
+| |brightmart版roberta |[github](https://github.com/brightmart/roberta_zh)|√|
+| | 哈工大版roberta| [github](https://github.com/ymcui/Chinese-BERT-wwm)|√|
+| | 追一开源bert|[github](https://github.com/ZhuiyiTechnology/pretrained-models) |√|
+| |LaBSE（多国语言BERT） | [github](https://github.com/bojone/labse)|√|
+|albert |谷歌albert |[github](https://github.com/google-research/ALBERT) |x|
+| | brightmart版albert| [github](https://github.com/brightmart/albert_zh)|x|
+| |苏神转换后的albert |[github](https://github.com/bojone/albert_zh) |x|
+| NEZHA|双向NEZHA |[github](https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-TensorFlow) |x|
+| | 单向NEZHA| [github](https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/NEZHA-Gen-TensorFlow)|x|
+|T5 |谷歌T5 | [github](https://github.com/google-research/text-to-text-transfer-transformer)|√|
+| | MT5| [github](https://github.com/google-research/text-to-text-transfer-transformer) |√|
+| | 苏神T5-pegasus| [github](https://github.com/ZhuiyiTechnology/t5-pegasus)|√|
+| | T5.1.1|[github](https://github.com/google-research/text-to-text-transfer-transformer/blob/master/released_checkpoints.md#t511) |√|
+|ELECTRA |Google原版ELECTRA |[github](https://github.com/google-research/electra) |x|
+| | 哈工大版ELECTRA| [github](https://github.com/ymcui/Chinese-ELECTRA) |x|
+| | CLUE版ELECTRA| [github](https://github.com/CLUEbenchmark/ELECTRA)|x|
+|GPT-oai | GPT_OpenAI| [github](https://github.com/bojone/CDial-GPT-tf)|x|
+| GPT2-ML|  GPT2-ML|  [github](https://github.com/imcaspar/gpt2-ml)|x|
+| GAU| GAU-ALPHA|[github](https://github.com/ZhuiyiTechnology/GAU-alpha) |x|
+| Roformer| 苏神原版roformer|[github](https://github.com/ZhuiyiTechnology/roformer) |√|
+| | roformer-sim|[github](https://github.com/ZhuiyiTechnology/roformer-sim) |√|
+|Roformerv2| 苏神原版roformer-v2|[github](https://github.com/ZhuiyiTechnology/roformer-v2 |√|
 
 
 
@@ -75,8 +75,8 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
   | 模型分类| 模型名称 |  权重链接|支持kvcache 生成|
   | -------------- | -------------------------- | ------------------------------------------------------------ |-- |
-| T5| ChatYuan| https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  |  √|
-| | Flan-T5-small| 链接：https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr 提取码：eefr|  √|
+| T5| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59)提取码：6u59  |  √|
+| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|
 
 
 <strong>注意事项</strong>
