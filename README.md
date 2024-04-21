@@ -71,7 +71,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
   | 模型分类| 模型名称 |  权重链接|
   | -------------- | -------------------------- | ------------------------------------------------------------ |
-| T5| ChatYuan|  [https://github.com/google-research/bert](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  )|  
+| T5| ChatYuan| https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59 提取码：6u59  |  
 
 
 <strong>注意事项</strong>
