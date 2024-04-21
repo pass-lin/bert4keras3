@@ -75,7 +75,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
   | 模型分类| 模型名称 |  权重链接|支持kvcache 生成|
   | -------------- | -------------------------- | ------------------------------------------------------------ |-- |
-| T5| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59)提取码：6u59  |  √|
+| T5| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59) 提取码：6u59  |  √|
 | | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|
 
 
