@@ -66,7 +66,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 | GAU| GAU-ALPHA|[github](https://github.com/ZhuiyiTechnology/GAU-alpha) |x|
 | Roformer| 苏神原版roformer|[github](https://github.com/ZhuiyiTechnology/roformer) |√|
 | | roformer-sim|[github](https://github.com/ZhuiyiTechnology/roformer-sim) |√|
-|Roformerv2| 苏神原版roformer-v2|[github](https://github.com/ZhuiyiTechnology/roformer-v2 |√|
+|Roformerv2| 苏神原版roformer-v2|[github](https://github.com/ZhuiyiTechnology/roformer-v2) |√|
 
 
 
