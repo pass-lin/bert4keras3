@@ -71,7 +71,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 
 
-### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
+## bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
 
   | 模型分类| 模型名称 |  权重链接|支持kv-cache 生成|数据类型|
   | -------------- | -------------------------- | ------------------------------------------------------------ |-- |---- |
