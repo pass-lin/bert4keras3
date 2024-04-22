@@ -73,13 +73,13 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 ### bert4keras3的新增加的模型权重，不再使用ckpt存储。通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载：      
 
-  | 模型分类| 模型名称 |  权重链接|支持kvcache 生成|
-  | -------------- | -------------------------- | ------------------------------------------------------------ |-- |
-| T5.1.1| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59) 提取码：6u59  |  √|
-| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|
-| | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) 提取码：ukep|  √|
-| | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) 提取码：1so0|  √|
-| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) 提取码：2epu|  √|
+  | 模型分类| 模型名称 |  权重链接|支持kvcache 生成|数据类型|
+  | -------------- | -------------------------- | ------------------------------------------------------------ |-- |---- |
+| T5.1.1| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59) 提取码：6u59  |  √|FP32|
+| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|FP32|
+| | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) 提取码：ukep|  √|FP32|
+| | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) 提取码：1so0|  √|FP32|
+| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) 提取码：2epu|  √|FP32|
 
 
 
