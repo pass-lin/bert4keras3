@@ -84,6 +84,25 @@ def gelu_erf(x):
     """基于Erf直接计算的gelu函数
     """
     return 0.5 * x * (1.0 + ops.erf(x / np.sqrt(2.0)))
+
+
+
+def integerize_shape(func):
+    """装饰器，保证input_shape一定是int或None
+    """
+    def convert(item):
+        if hasattr(item, '__iter__'):
+            return [convert(i) for i in item]
+        elif hasattr(item, 'value'):
+            return item.value
+        else:
+            return item
+
+    def new_func(self, input_shape):
+        input_shape = convert(input_shape)
+        return func(self, input_shape)
+
+    return new_func
 def set_gelu(version):
     """设置gelu版本
     """

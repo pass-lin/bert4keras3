@@ -1,0 +1,161 @@
+from bert4keras3.backend import keras, ops , np , K,recompute_grad,integerize_shape
+from keras import Layer,initializers,activations
+from keras.layers import Dense ,Dropout
+from bert4keras3.backend import divide_no_nan
+class ScaleOffset(Layer):
+    """简单的仿射变换层（最后一维乘上gamma向量并加上beta向量）
+    说明：1、具体操作为最后一维乘上gamma向量并加上beta向量；
+         2、如果直接指定scale和offset，那么直接常数缩放和平移；
+         3、hidden_*系列参数仅为有条件输入时(conditional=True)使用，
+            用于通过外部条件控制beta和gamma。
+    """
+    def __init__(
+        self,
+        scale=True,
+        offset=True,
+        conditional=False,
+        hidden_units=None,
+        hidden_activation='linear',
+        hidden_initializer='glorot_uniform',
+        **kwargs
+    ):
+        super(ScaleOffset, self).__init__(**kwargs)
+        self.scale = scale
+        self.offset = offset
+        self.conditional = conditional
+        self.hidden_units = hidden_units
+        self.hidden_activation = activations.get(hidden_activation)
+        self.hidden_initializer = initializers.get(hidden_initializer)
+
+    @integerize_shape
+    def build(self, input_shape):
+        super(ScaleOffset, self).build(input_shape)
+        
+        if self.conditional:
+            input_shape = input_shape[0]
+
+        if self.offset is True:
+            self.beta = self.add_weight(
+                name='beta', shape=(input_shape[-1],), initializer='zeros'
+            )
+        if self.scale is True:
+            self.gamma = self.add_weight(
+                name='gamma', shape=(input_shape[-1],), initializer='ones'
+            )
+
+        if self.conditional:
+
+            if self.hidden_units is not None:
+                self.hidden_dense = Dense(
+                    units=self.hidden_units,
+                    activation=self.hidden_activation,
+                    use_bias=False,
+                    kernel_initializer=self.hidden_initializer
+                )
+
+            if self.offset is not False and self.offset is not None:
+                self.beta_dense = Dense(
+                    units=input_shape[-1],
+                    use_bias=False,
+                    kernel_initializer='zeros'
+                )
+            if self.scale is not False and self.scale is not None:
+                self.gamma_dense = Dense(
+                    units=input_shape[-1],
+                    use_bias=False,
+                    kernel_initializer='zeros'
+                )
+
+    def compute_mask(self, inputs, mask=None):
+        if self.conditional:
+            return mask if mask is None else mask[0]
+        else:
+            return mask
+
+    @recompute_grad
+    def call(self, inputs):
+        """如果带有条件，则默认以list为输入，第二个是条件
+        """
+        if self.conditional:
+            inputs, conds = inputs
+            if self.hidden_units is not None:
+                conds = self.hidden_dense(conds)
+            conds = align(conds, [0, -1], ops.ndim(inputs))
+
+        if self.scale is not False and self.scale is not None:
+            gamma = self.gamma if self.scale is True else self.scale
+            if self.conditional:
+                gamma = gamma + self.gamma_dense(conds)
+            inputs = inputs * gamma
+
+        if self.offset is not False and self.offset is not None:
+            beta = self.beta if self.offset is True else self.offset
+            if self.conditional:
+                beta = beta + self.beta_dense(conds)
+            inputs = inputs + beta
+
+        return inputs
+
+    def compute_output_shape(self, input_shape):
+        if self.conditional:
+            return input_shape[0]
+        else:
+            return input_shape
+
+    def get_config(self):
+        config = {
+            'scale': self.scale,
+            'offset': self.offset,
+            'conditional': self.conditional,
+            'hidden_units': self.hidden_units,
+            'hidden_activation': activations.serialize(self.hidden_activation),
+            'hidden_initializer':
+                initializers.serialize(self.hidden_initializer),
+        }
+        base_config = super(ScaleOffset, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+class LayerNormalization(ScaleOffset):
+    """(Conditional) Layer Normalization
+    """
+    def __init__(
+        self, zero_mean=True, unit_variance=True, epsilon=None, **kwargs
+    ):
+        super(LayerNormalization, self).__init__(**kwargs)
+        self.zero_mean = zero_mean
+        self.unit_variance = unit_variance
+        self.epsilon = epsilon or K.epsilon()
+
+    @recompute_grad
+    def call(self, inputs):
+        """如果是条件Layer Norm，则默认以list为输入，第二个是条件
+        """
+        
+        if self.conditional:
+            inputs, conds = inputs
+
+        if self.zero_mean:
+            mean = ops.mean(inputs, axis=-1, keepdims=True)
+            inputs = inputs - mean
+            
+        if self.unit_variance:
+            variance = ops.mean(ops.square(inputs), axis=-1, keepdims=True)
+            
+            inputs = divide_no_nan(
+                inputs, ops.sqrt(variance + self.epsilon)
+            )
+        if self.conditional:
+            inputs = [inputs, conds]
+
+        return super(LayerNormalization, self).call(inputs)
+
+    def get_config(self):
+        config = {
+            'zero_mean': self.zero_mean,
+            'unit_variance': self.unit_variance,
+            'epsilon': self.epsilon,
+        }
+        base_config = super(LayerNormalization, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
