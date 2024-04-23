@@ -88,7 +88,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || Gemma-2b-Code| [百度网盘](https://pan.baidu.com/s/1qVmbNfA7XujhlIKG78czQw?pwd=pwqf) 提取码：pwqf|  √|BF16|
 || Gemma-2b-instruct| [百度网盘](https://pan.baidu.com/s/1v6aeShy26wkZqhGtiUeBqA?pwd=bb34) 提取码：bb34|  √|BF16|
 || Gemma1.1-2b-instruct| [百度网盘](https://pan.baidu.com/s/18vymczrlsdycGYHvlCWiNA?pwd=tba5) 提取码：tba5|  √|BF16|
-| Gemma-7b| [百度网盘]() 提取码：44v2|  √|BF16|
+||Gemma-7b| [百度网盘]() 提取码：44v2|  √|BF16|
 || Gemma-7b-Code| [百度网盘](https://pan.baidu.com/s/1xEEKHzpax-U8uGrXaYY0-w?pwd=km5p) 提取码：km5p|  √|BF16|
 || Gemma-7b-instruct| [百度网盘](https://pan.baidu.com/s/1mVr7R_Y7avgMDx68-WZlyg?pwd=wank) 提取码：wank|  √|BF16|
 || Gemma1.1-7b-instruct| [百度网盘]() 提取码：tba5|  √|BF16|
