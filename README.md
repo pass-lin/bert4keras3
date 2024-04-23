@@ -73,26 +73,26 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 
 ### bert4keras3的新增加的模型权重，不再使用ckpt存储      
 ### 通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载
-  | 模型分类| 模型名称 |  权重链接|支持kv-cache 生成|数据类型|
-  | -------------- | -------------------------- | ------------------------------------------------------------ |-- |---- |
-| T5.1.1| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59) 提取码：6u59  |  √|FP32|
-| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|FP32|
-| | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) 提取码：ukep|  √|FP32|
-| | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) 提取码：1so0|  √|FP32|
-| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) 提取码：2epu|  √|FP32|
-| | MT5-large| [百度网盘](https://pan.baidu.com/s/1kIPArbQDZ0gsn-B3hzAjyg?pwd=vvoc ) 提取码：vvoc|  √|FP32|
-| | UMT5-small| [百度网盘](https://pan.baidu.com/s/1_e8fifYoJ_qxLYIH_Tyhjw?pwd=618x  ) 提取码：618x|  √|FP32|
-| | UMT5-base| [百度网盘](https://pan.baidu.com/s/1ivKPkEVwjK9fOlcrzqfT8Q?pwd=phdf ) 提取码：phdf|  √|FP32|
-| | UMT5-xl| [百度网盘](https://pan.baidu.com/s/1QnI8X-zbO2qoi_-cV5tGxA?pwd=3a3h) 提取码：3a3h|  √|FP32|
-|Gemma| Gemma-2b| [百度网盘](https://pan.baidu.com/s/1-RhDbnAufd0Yf_HRgK6NZA?pwd=44v2) 提取码：44v2|  √|BF16|
-|| Gemma-2b-Code| [百度网盘](https://pan.baidu.com/s/1qVmbNfA7XujhlIKG78czQw?pwd=pwqf) 提取码：pwqf|  √|BF16|
-|| Gemma-2b-instruct| [百度网盘](https://pan.baidu.com/s/1v6aeShy26wkZqhGtiUeBqA?pwd=bb34) 提取码：bb34|  √|BF16|
-|| Gemma1.1-2b-instruct| [百度网盘](https://pan.baidu.com/s/18vymczrlsdycGYHvlCWiNA?pwd=tba5) 提取码：tba5|  √|BF16|
-||Gemma-7b| [百度网盘]() 提取码：44v2|  √|BF16|
-|| Gemma-7b-Code| [百度网盘](https://pan.baidu.com/s/1xEEKHzpax-U8uGrXaYY0-w?pwd=km5p) 提取码：km5p|  √|BF16|
-|| Gemma-7b-instruct| [百度网盘](https://pan.baidu.com/s/1mVr7R_Y7avgMDx68-WZlyg?pwd=wank) 提取码：wank|  √|BF16|
-|| Gemma1.1-7b-instruct| [百度网盘]() 提取码：tba5|  √|BF16|
-|| Gemma-7b-instruct-Code| [百度网盘]() 提取码：44v2|  √|BF16|
+  | 模型分类| 模型名称 |  权重链接|支持kv-cache 生成|数据类型|分词器|
+  | -------------- | -------------------------- | ------------------------------------------------------------ |-- |---- |--------  |
+| T5.1.1| ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59) 提取码：6u59  |  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr) 提取码：eefr|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) 提取码：ukep|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) 提取码：1so0|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) 提取码：2epu|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | MT5-large| [百度网盘](https://pan.baidu.com/s/1kIPArbQDZ0gsn-B3hzAjyg?pwd=vvoc ) 提取码：vvoc|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | UMT5-small| [百度网盘](https://pan.baidu.com/s/1_e8fifYoJ_qxLYIH_Tyhjw?pwd=618x  ) 提取码：618x|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | UMT5-base| [百度网盘](https://pan.baidu.com/s/1ivKPkEVwjK9fOlcrzqfT8Q?pwd=phdf ) 提取码：phdf|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+| | UMT5-xl| [百度网盘](https://pan.baidu.com/s/1QnI8X-zbO2qoi_-cV5tGxA?pwd=3a3h) 提取码：3a3h|  √|FP32|bert4keras3.tokenizers.SpTokenizer|
+|Gemma| Gemma-2b| [百度网盘](https://pan.baidu.com/s/1-RhDbnAufd0Yf_HRgK6NZA?pwd=44v2) 提取码：44v2|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma-2b-Code| [百度网盘](https://pan.baidu.com/s/1qVmbNfA7XujhlIKG78czQw?pwd=pwqf) 提取码：pwqf|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma-2b-instruct| [百度网盘](https://pan.baidu.com/s/1v6aeShy26wkZqhGtiUeBqA?pwd=bb34) 提取码：bb34|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma1.1-2b-instruct| [百度网盘](https://pan.baidu.com/s/18vymczrlsdycGYHvlCWiNA?pwd=tba5) 提取码：tba5|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+||Gemma-7b| [百度网盘]() 提取码：44v2|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma-7b-Code| [百度网盘](https://pan.baidu.com/s/1xEEKHzpax-U8uGrXaYY0-w?pwd=km5p) 提取码：km5p|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma-7b-instruct| [百度网盘](https://pan.baidu.com/s/1mVr7R_Y7avgMDx68-WZlyg?pwd=wank) 提取码：wank|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma1.1-7b-instruct| [百度网盘]() 提取码：tba5|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
+|| Gemma-7b-instruct-Code| [百度网盘]() 提取码：44v2|  √|BF16|bert4keras3.tokenizers.SpTokenizer|
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
