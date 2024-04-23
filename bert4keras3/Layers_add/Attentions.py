@@ -10,8 +10,8 @@ def repeat_kv(x,num):
     #x shape is [batch_size,seq_len,heads_heads_dims]
     shape = int_shape(x)
     shape[2]*=num
-    x = ops.repeat(ops.expand_dims(x,axis=2),num,axis=2)#[batch_size,seq_len,num,heads_heads_dims]
-    return ops.reshape(x,shape)
+    x = ops.repeat(ops.expand_dims(x,axis=-2),num,axis=-2)#[batch_size,seq_len,num,heads_heads_dims]
+    return ops.reshape(x,list(shape))
 class MultiHeadAttention(Layer):
     """多头注意力机制
     """
@@ -29,6 +29,7 @@ class MultiHeadAttention(Layer):
         kernel_initializer='glorot_uniform',
         o_bias=None,
         query_head=None,
+        use_EinsumDense = False,
         **kwargs
     ):
         super(MultiHeadAttention, self).__init__(**kwargs)
@@ -43,6 +44,7 @@ class MultiHeadAttention(Layer):
         self.return_attention_scores = return_attention_scores
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.o_bias = o_bias
+        self.use_EinsumDense = use_EinsumDense
         self.query_head = query_head
         if self.o_bias==None:
             self.o_bias = use_bias
@@ -53,28 +55,63 @@ class MultiHeadAttention(Layer):
         elif self.query_head%heads!=0:
             raise('query_head a should be divisible by heads')
     def build(self, input_shape):
-        
-        self.q_dense = Dense(
-            units=self.key_size * self.query_head,
-            use_bias=self.use_bias,
-            kernel_initializer=self.kernel_initializer
-            
-        )
-        self.k_dense = Dense(
-            units=self.key_size * self.heads,
-            use_bias=self.use_bias,
-            kernel_initializer=self.kernel_initializer
-        )
-        self.v_dense = Dense(
-            units=self.head_size * self.heads,
-            use_bias=self.use_bias,
-            kernel_initializer=self.kernel_initializer
-        )
-        self.o_dense = Dense(
-            units=self.out_dim,
-            use_bias=self.o_bias,
-            kernel_initializer=self.kernel_initializer
-        )
+        if self.use_EinsumDense:
+            self.query_dense = keras.layers.EinsumDense(
+            "btd,ndh->btnh",
+            output_shape=(None, self.query_head, self.key_size),
+            kernel_initializer=self.kernel_initializer,
+            name="query",
+            )
+            self.query_dense.build(input_shape[0])
+
+            self.key_dense = keras.layers.EinsumDense(
+                "bsd,kdh->bskh",
+                output_shape=(None, self.heads, self.key_size),
+                kernel_initializer=self.kernel_initializer,
+                name="key",
+            )
+            self.key_dense.build(input_shape[1])
+
+            self.value_dense = keras.layers.EinsumDense(
+                "bsd,kdh->bskh",
+                output_shape=(None, self.heads, self.head_size),
+                kernel_initializer=self.kernel_initializer,
+                name="value",
+            )
+            self.value_dense.build(input_shape[2])
+
+
+            self.output_dense = keras.layers.EinsumDense(
+                equation="btnh,nhd->btd",
+                output_shape=(None, self.out_dim),
+                kernel_initializer=self.kernel_initializer,
+                name="attention_output",
+            )
+            self.output_dense.build(  
+                (None, None, self.query_head, self.key_size)
+            )
+        else:
+            self.q_dense = Dense(
+                units=self.key_size * self.query_head,
+                use_bias=self.use_bias,
+                kernel_initializer=self.kernel_initializer
+                
+            )
+            self.k_dense = Dense(
+                units=self.key_size * self.heads,
+                use_bias=self.use_bias,
+                kernel_initializer=self.kernel_initializer
+            )
+            self.v_dense = Dense(
+                units=self.head_size * self.heads,
+                use_bias=self.use_bias,
+                kernel_initializer=self.kernel_initializer
+            )
+            self.o_dense = Dense(
+                units=self.out_dim,
+                use_bias=self.o_bias,
+                kernel_initializer=self.kernel_initializer
+            )
         if self.attention_dropout:
             self.dropout=Dropout(self.attention_dropout)
         super(MultiHeadAttention, self).build(input_shape)
@@ -92,20 +129,28 @@ class MultiHeadAttention(Layer):
         if mask is not None:
             q_mask, v_mask = mask[0], mask[2]
         # 线性变换
-        qw = self.q_dense(q)
-        kw = self.k_dense(k)
-        vw = self.v_dense(v)
-        # 形状变换
-        qw = ops.reshape(qw, (self.heads, self.key_size), -1)
-        kw = ops.reshape(kw, (self.heads, self.key_size), -1)
-        vw = ops.reshape(vw, (self.heads, self.head_size), -1)
+        if self.use_EinsumDense:
+            qw = self.query_dense(q)
+            kw = self.key_dense(k)
+            vw = self.value_dense(v)
+        else:
+            qw = self.q_dense(q)
+            kw = self.k_dense(k)
+            vw = self.v_dense(v)
+            # 形状变换
+            qw = ops.reshape(qw, (self.query_head, self.key_size), -1)
+            kw = ops.reshape(kw, (self.heads, self.key_size), -1)
+            vw = ops.reshape(vw, (self.heads, self.head_size), -1)
         # Attention
         qkv_inputs = [qw, kw, vw] + inputs[3:]
         qv_masks = [q_mask, v_mask]
         
         o, a,cache = self.pay_attention_to(qkv_inputs, qv_masks, **kwargs)
         # 完成输出
-        o = self.o_dense(ops.flatten(o, 2))
+        if self.use_EinsumDense:
+            o = self.output_dense(o)
+        else:
+            o = self.o_dense(ops.flatten(o, 2))
         # 返回结果
          
         
@@ -227,6 +272,7 @@ class MultiHeadAttention(Layer):
         config = {
             'heads': self.heads,
             'o_bias':self.o_bias,
+            'use_EinsumDense':self.use_EinsumDense,
             'query_head':self.query_head,
             'head_size': self.head_size,
             'out_dim': self.out_dim,

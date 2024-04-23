@@ -1,4 +1,4 @@
-from bert4keras3.backend import keras, ops , np , K,recompute_grad,integerize_shape
+from bert4keras3.backend import keras, ops , np , K,recompute_grad,integerize_shape,align
 from keras import Layer,initializers,activations
 from keras.layers import Dense ,Dropout
 from bert4keras3.backend import divide_no_nan
@@ -159,3 +159,54 @@ class LayerNormalization(ScaleOffset):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+class RMSNormalization(keras.layers.Layer):
+    def __init__(self, epsilon=1e-6, **kwargs):
+        super().__init__(**kwargs)
+        self.epsilon = epsilon
+
+    def build(self, input_shape):
+        self.scale = self.add_weight(
+            name="scale",
+            trainable=True,
+            shape=(input_shape[-1],),
+            initializer="zeros",
+        )
+        self.built = True
+
+    def call(self, x):
+        # Always compute normalization in float32.
+        x = ops.cast(x, "float32")
+        scale = ops.cast(self.scale, "float32")
+        var = ops.mean(ops.square(x), axis=-1, keepdims=True)
+        normed_inputs = x * ops.reciprocal(ops.sqrt(var + self.epsilon))
+        normed_inputs = normed_inputs * (1 + scale)
+        return ops.cast(normed_inputs, self.compute_dtype)
+    
+class LlamaLayerNorm(keras.layers.Layer):
+    """A normalization layer for Llama that implements RMS normalization."""
+
+    def __init__(self, epsilon=1e-6, **kwargs):
+        super().__init__(**kwargs)
+        self.epsilon = epsilon
+
+    def build(self, input_shape):
+        dim = input_shape[-1]
+        self.scale = self.add_weight(
+            name="scale",
+            trainable=True,
+            shape=(dim,),
+            initializer="ones",
+            dtype=self.variable_dtype,
+        )
+        self.built = True
+
+    def call(self, x):
+        x = ops.cast(x, "float32")
+        var = ops.mean(ops.power(x, 2), axis=-1, keepdims=True)
+        x = x * ops.rsqrt(var + self.epsilon)
+        return ops.cast(x, self.compute_dtype) * self.scale
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"epsilon": self.epsilon})
+        return config

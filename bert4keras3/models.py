@@ -11,7 +11,7 @@ from bert4keras3.Models.GPTs import *
 from bert4keras3.Models.T5models import *
 from bert4keras3.Models.GPTs import *
 from bert4keras3.Models.GAUs import *
-
+from bert4keras3.Models.LLamas import *
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
     """
@@ -92,6 +92,8 @@ def build_transformer_model(
         'mt5.1.1': T5,
         'mt5.1.1_encoder': T5_Encoder,
         'mt5.1.1_decoder': T5_Decoder,
+        'gemma':Gemma,
+
         'misakat5':MisakaT5,
     }
 

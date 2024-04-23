@@ -25,7 +25,7 @@ class Transformer(object):
         num_hidden_layers,  # Transformer总层数
         num_attention_heads,  # Attention的头数
         intermediate_size,  # FeedForward的隐层维度
-        hidden_act,  # FeedForward隐层的激活函数
+        hidden_act=None,  # FeedForward隐层的激活函数
         dropout_rate=None,  # Dropout比例
         attention_dropout_rate=None,  # Attention矩阵的Dropout比例
         embedding_size=None,  # 是否指定embedding_size
@@ -411,7 +411,6 @@ class LM_Mask(object):
 
             self.attention_bias = self.apply(
                 inputs=self.inputs[0],
-                dtype='float32',
                 layer=Lambda,
                 function=lm_mask,
                 name='Attention-Mask'
@@ -639,7 +638,7 @@ class UniLM_Mask(LM_Mask):
                 inputs=self.inputs[1],
                 layer=Lambda,
                 function=unilm_mask,
-                dtype='float32',
+
                 name='Attention-Mask'
             )
 

@@ -380,7 +380,11 @@ def align(tensor, axes, ndim=None):
     if keras.__version__>'3.0' and os.environ["KERAS_BACKEND"] != "jax":
         return tensor[indices]
     return tensor[tuple(indices)]
-
+def _apply_rotary_pos_emb(tensor, cos_emb, sin_emb):
+    x1, x2 = ops.split(tensor, 2, axis=-1)
+    half_rot_tensor = ops.stack((-x2, x1), axis=-2)
+    half_rot_tensor = ops.reshape(half_rot_tensor, ops.shape(tensor))
+    return (tensor * cos_emb) + (half_rot_tensor * sin_emb)
 
 def apply_rotary_position_embeddings(sinusoidal, *tensors):
     """应用RoPE到tensors中
@@ -393,6 +397,15 @@ def apply_rotary_position_embeddings(sinusoidal, *tensors):
     ]), 'all tensors must have the same shape'
     ndim = ops.ndim(tensors[0])
     sinusoidal = align(sinusoidal, [0, 1, -1], ndim)
+    if int_shape(tensors[0])[-1]!=int_shape(sinusoidal)[-1]:
+
+        dims = sinusoidal.shape[-1]
+        cos_pos = sinusoidal[..., :dims//2]
+        sin_pos = sinusoidal[..., dims//2:]
+        outputs = []
+        for tensor in tensors:
+            outputs.append(_apply_rotary_pos_emb(tensor, cos_pos, sin_pos))
+        return outputs[0] if len(outputs) == 1 else outputs
     cos_pos = ops.repeat(sinusoidal[..., 1::2], 2, -1)
     sin_pos = ops.repeat(sinusoidal[..., ::2], 2, -1)
     outputs = []
