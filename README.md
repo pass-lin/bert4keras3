@@ -83,6 +83,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 | | MT5-large| [百度网盘](https://pan.baidu.com/s/1kIPArbQDZ0gsn-B3hzAjyg?pwd=vvoc ) 提取码：vvoc|  √|FP32|
 | | UMT5-small| [百度网盘](https://pan.baidu.com/s/1_e8fifYoJ_qxLYIH_Tyhjw?pwd=618x  ) 提取码：618x|  √|FP32|
 | | UMT5-base| [百度网盘](https://pan.baidu.com/s/1ivKPkEVwjK9fOlcrzqfT8Q?pwd=phdf ) 提取码：phdf|  √|FP32|
+| | UMT5-xl| [百度网盘](https://pan.baidu.com/s/1QnI8X-zbO2qoi_-cV5tGxA?pwd=3a3h) 提取码：3a3h|  √|FP32|
 
 
 <strong>注意事项</strong>
