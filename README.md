@@ -99,6 +99,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 - 注2：下载下来的ELECTRA权重，如果没有json配置文件的话，参考<a href="https://github.com/ymcui/Chinese-ELECTRA/issues/3">这里</a>自己改一个（需要加上`type_vocab_size`字段）。(苏神注)
 - 注3： 模型分类这里会跳转到使用的example
 - 注4：SpTokenizer指的是bert4keras3.tokenizers.SpTokenizer
+- 注5：因为不能转换全部的权重，所以我提供了转化权重的脚本，有需要自己去转。
 # 版本更新
 ## 2023.12.30发布bert4keras3的第一个版本1.0 
 对bert4keras除优化器部分外的升级，实现对tensorflow，jax，torch的多后端兼容
