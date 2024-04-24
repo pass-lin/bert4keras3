@@ -84,7 +84,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 | | UMT5-small| [百度网盘](https://pan.baidu.com/s/1_e8fifYoJ_qxLYIH_Tyhjw?pwd=618x  ) 提取码：618x|  √|FP32|SpTokenizer|
 | | UMT5-base| [百度网盘](https://pan.baidu.com/s/1ivKPkEVwjK9fOlcrzqfT8Q?pwd=phdf ) 提取码：phdf|  √|FP32|SpTokenizer|
 | | UMT5-xl| [百度网盘](https://pan.baidu.com/s/1QnI8X-zbO2qoi_-cV5tGxA?pwd=3a3h) 提取码：3a3h|  √|FP32|SpTokenizer|
-|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py| Gemma-2b| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
+|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
 || Gemma-2b-Code| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
 || Gemma-2b-instruct| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
 || Gemma1.1-2b-instruct| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
