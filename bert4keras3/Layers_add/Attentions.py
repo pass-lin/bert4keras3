@@ -1,16 +1,17 @@
 from bert4keras3.backend import keras, ops , np , K,recompute_grad,int_shape
 from keras import Layer,initializers,activations
 from keras.layers import Dense ,Dropout
-from bert4keras3.backend import apply_rotary_position_embeddings,integerize_shape
+from bert4keras3.backend import apply_rotary_position_embeddings,integerize_shape,apply_rotary_position_embeddings_keras
 from bert4keras3.backend import attention_normalize,align,enable_flashatt
 from bert4keras3.Layers_add.LayerNorms import ScaleOffset
+from bert4keras3.Layers_add.Embeddings import RotaryEmbedding
 if enable_flashatt:
     from bert4keras3.backend import flash_mha
 def repeat_kv(x,num):
     #x shape is [batch_size,seq_len,heads_heads_dims]
     shape = int_shape(x)
     shape[2]*=num
-    x = ops.repeat(ops.expand_dims(x,axis=-2),num,axis=-2)#[batch_size,seq_len,num,heads_heads_dims]
+    x = ops.repeat(x[:, :, None, :, :],num,axis=2)#[batch_size,seq_len,num,heads_heads_dims]
     return ops.reshape(x,list(shape))
 class MultiHeadAttention(Layer):
     """多头注意力机制
@@ -30,11 +31,18 @@ class MultiHeadAttention(Layer):
         o_bias=None,
         query_head=None,
         use_EinsumDense = False,
+        rope_mode='su',#su代表苏神实现，keras代表keras_nlp实现
+        max_wavelength=10_000.0,
+        scaling_factor=1.0,
+        flatten_o_dense =  True,#为了适配gemma
         **kwargs
     ):
         super(MultiHeadAttention, self).__init__(**kwargs)
         self.heads = heads
         self.head_size = head_size
+        self.flatten_o_dense=flatten_o_dense
+        self.max_wavelength = max_wavelength
+        self.scaling_factor = scaling_factor
         self.out_dim = out_dim or heads * head_size
         self.key_size = key_size or head_size
         self.use_bias = use_bias
@@ -46,6 +54,7 @@ class MultiHeadAttention(Layer):
         self.o_bias = o_bias
         self.use_EinsumDense = use_EinsumDense
         self.query_head = query_head
+        self.rope_mode=rope_mode
         if self.o_bias==None:
             self.o_bias = use_bias
         if self.query_head==None:
@@ -77,6 +86,7 @@ class MultiHeadAttention(Layer):
                 output_shape=(None, self.heads, self.head_size),
                 kernel_initializer=self.kernel_initializer,
                 name="value",
+                
             )
             self.value_dense.build(input_shape[2])
 
@@ -96,6 +106,7 @@ class MultiHeadAttention(Layer):
                 use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer
                 
+                
             )
             self.k_dense = Dense(
                 units=self.key_size * self.heads,
@@ -114,6 +125,8 @@ class MultiHeadAttention(Layer):
             )
         if self.attention_dropout:
             self.dropout=Dropout(self.attention_dropout)
+        if self.rope_mode=='keras':
+            self.rope = RotaryEmbedding(self.max_wavelength,self.scaling_factor)
         super(MultiHeadAttention, self).build(input_shape)
     @recompute_grad
     def call(self, inputs, mask=None, **kwargs):
@@ -138,10 +151,14 @@ class MultiHeadAttention(Layer):
             kw = self.k_dense(k)
             vw = self.v_dense(v)
             # 形状变换
-            qw = ops.reshape(qw, (self.query_head, self.key_size), -1)
-            kw = ops.reshape(kw, (self.heads, self.key_size), -1)
-            vw = ops.reshape(vw, (self.heads, self.head_size), -1)
+            b,s = int_shape(qw)[:2]
+            qw = ops.reshape(qw, [b,s,self.query_head, self.key_size])
+            
+            b,s = int_shape(vw)[:2]
+            kw = ops.reshape(kw, [b,s,self.heads, self.key_size])
+            vw = ops.reshape(vw, [b,s,self.heads, self.head_size])
         # Attention
+        
         qkv_inputs = [qw, kw, vw] + inputs[3:]
         qv_masks = [q_mask, v_mask]
         
@@ -149,8 +166,11 @@ class MultiHeadAttention(Layer):
         # 完成输出
         if self.use_EinsumDense:
             o = self.output_dense(o)
-        else:
+        elif self.flatten_o_dense:
             o = self.o_dense(ops.flatten(o, 2))
+        else:
+            b,s = ops.shape(o)[:-2]
+            o = self.o_dense(ops.reshape(o, [b,s,-1]))
         # 返回结果
          
         
@@ -161,6 +181,16 @@ class MultiHeadAttention(Layer):
         else:
             return o
 
+    def keras_apply_rope(self, x, start_index):
+        """Rope rotate q or k."""
+        x = self.rope(x, start_index=start_index)
+        # Gemma uses a different layout for positional embeddings.
+        # The transformation below ensures the embeddings are numerically
+        # equivalent to the original gemma implementation.
+        x = ops.reshape(
+            ops.stack(ops.split(x, 2, axis=-1), axis=-1), ops.shape(x)
+        )
+        return x
     def pay_attention_to(self, inputs, mask=None, **kwargs):
         """实现标准的乘性多头注意力
         a_bias: 对attention矩阵的bias。
@@ -182,15 +212,17 @@ class MultiHeadAttention(Layer):
             n += 1
         
         if p_bias == 'rotary':
-            
-            #print(inputs[n].shape, qw.shape, kw.shape)
-            qw, kw = apply_rotary_position_embeddings(inputs[n], qw, kw)
-            n += 1
+            if self.rope_mode=='su':
+                qw, kw = apply_rotary_position_embeddings(inputs[n], qw, kw)
+            elif self.rope_mode=='keras':
+                qw = self.keras_apply_rope(qw, start_index=inputs[n+2] if use_cache else 0)
+                kw = self.keras_apply_rope(kw, start_index=inputs[n+2] if use_cache else 0)
+            else:
+                raise('rope_mode must be su or keras')
 
-        if self.query_head!=self.heads:
-            num = self.query_head//self.heads
-            kw = repeat_kv(kw,num)
-            vw = repeat_kv(vw,num)
+            n += 1
+        
+        
         if use_cache:
             cache = inputs[n]
             n +=1
@@ -200,7 +232,7 @@ class MultiHeadAttention(Layer):
                 cache_update_index = inputs[n]
                 n += 1
                 start = [0, cache_update_index, 0, 0]
-                #print(key_cache.shape, start, kw.shape)
+            
                 kw = ops.slice_update(key_cache, start, kw)
                 vw = ops.slice_update(value_cache, start, vw)
                 cache = ops.stack((kw, vw), axis=1)
@@ -209,7 +241,6 @@ class MultiHeadAttention(Layer):
                 vw = value_cache
         else:
             cache = None
-        
         if enable_flashatt:
             is_causal = False
             if a_bias is not None:
@@ -220,30 +251,52 @@ class MultiHeadAttention(Layer):
             o = flash_mha(qw,kw,vw,softmax_scale=softmax_scale, is_causal=is_causal)
             return o,[],[]
         # Attention
-        a = ops.einsum('bjhd,bkhd->bhjk', qw, kw)
+        q_shape = ops.shape(qw)
+        b,s = q_shape[:-2]
+        if self.query_head!=self.heads:
+            
+            qw = ops.reshape(
+                qw,
+                (
+                    b,s,
+                    self.heads,
+                    self.query_head // self.heads,
+                    q_shape[-1],
+                ),
+            )
+            a = ops.einsum("btkgh,bskh->bkgts",qw,kw)
+            
+        else:
+            a = ops.einsum('bjhd,bkhd->bhjk', qw, kw)
+        
+        
         # 处理位置编码
         if p_bias == 'typical_relative':
             position_bias = inputs[n]
             a = a + ops.einsum('bjhd,jkd->bhjk', qw, position_bias)
         elif p_bias == 't5_relative':
             position_bias = ops.transpose(inputs[n], (2, 0, 1))
-            #print(a.shape,position_bias.shape)
             a = a + ops.expand_dims(position_bias, 0)
         # Attention（续）
         if self.attention_scale:
-            a = a / self.key_size**0.5
+            a = a * ops.cast(1/np.sqrt(self.key_size), dtype=qw.dtype)
         if a_bias is not None and ops.ndim(a_bias) == 3:
             a_bias = align(a_bias, [0, -2, -1], ops.ndim(a))
-        A = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
+        
+        A,mask = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
         
         if self.attention_dropout:
-            A = self.dropout(A)
+            A,mask = self.dropout(A)
         # 完成输出
-
-        o = ops.einsum('bhjk,bkhd->bjhd', A, vw)
+        if self.query_head!=self.heads:
+            o = ops.einsum("bkgts,bskh->btkgh", A, vw)
+            o = ops.reshape(o, (b, s, self.query_head, -1))
+        else:
+            o = ops.einsum('bhjk,bkhd->bjhd', A, vw)
         if p_bias == 'typical_relative':
             o = o + ops.einsum('bhjk,jkd->bjhd', A, position_bias)
-        
+
+
         return o,a,cache
 
     
@@ -271,6 +324,9 @@ class MultiHeadAttention(Layer):
     def get_config(self):
         config = {
             'heads': self.heads,
+            'max_wavelength':self.max_wavelength,
+            'scaling_factor':self.scaling_factor ,
+            'rope_mode':self.rope_mode,
             'o_bias':self.o_bias,
             'use_EinsumDense':self.use_EinsumDense,
             'query_head':self.query_head,
@@ -281,6 +337,7 @@ class MultiHeadAttention(Layer):
             'normalization': self.normalization,
             'attention_scale': self.attention_scale,
             'attention_dropout': self.attention_dropout,
+            'flatten_o_dense':self.flatten_o_dense,
             'return_attention_scores': self.return_attention_scores,
             'kernel_initializer':
                 initializers.serialize(self.kernel_initializer),

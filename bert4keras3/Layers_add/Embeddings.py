@@ -302,50 +302,58 @@ class RelativePositionEmbeddingT5(RelativePositionEmbedding):
         }
         base_config = super(RelativePositionEmbeddingT5, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
-
 class RotaryEmbedding(keras.layers.Layer):
-    """Rotary positional encoding layer.
-    使用方法和SinusoidalPositionEmbedding一样，但是和苏神的原始rope有些变化
-    """
 
     def __init__(
         self,
         max_wavelength=10000,
         scaling_factor=1.0,
-        output_dim=None,
+        sequence_axis=1,
+        feature_axis=-1,
         **kwargs
     ):
         super().__init__(**kwargs)
         self.max_wavelength = max_wavelength
+        self.sequence_axis = sequence_axis
+        self.feature_axis = feature_axis
         self.scaling_factor = scaling_factor
-        self.output_dim = output_dim
         self.built = True
 
-    def call(self, x, start_index=0, positions=None):
-        cos_emb, sin_emb = self._compute_cos_sin_embedding(
-            x, start_index, positions
-        )
+    def call(self, inputs, start_index=0):
         
-        embeddings = ops.concatenate([cos_emb,sin_emb ], axis=-1)
-        return embeddings
+        inputs = ops.moveaxis(
+            inputs, (self.feature_axis, self.sequence_axis), (-1, 1)
+        )
+        cos_emb, sin_emb = self._compute_cos_sin_embedding(inputs, start_index)
+        output = self._apply_rotary_pos_emb(inputs, cos_emb, sin_emb)
+        return ops.moveaxis(
+            output, (-1, 1), (self.feature_axis, self.sequence_axis)
+        )
 
-    def _compute_positions(self, inputs, start_index=0):
-        seq_len = ops.shape(inputs)[1]
-        positions = ops.arange(seq_len, dtype="float32")
-        return positions + ops.cast(start_index, dtype="float32")
+    def _apply_rotary_pos_emb(self, tensor, cos_emb, sin_emb):
+        x1, x2 = ops.split(tensor, 2, axis=-1)
+        # Avoid `ops.concatenate` for now, to avoid a obscure bug with XLA
+        # compilation on jax. We should be able to remove this once the
+        # following PR is in all jax releases we care about:
+        # https://github.com/openxla/xla/pull/7875
+        half_rot_tensor = ops.stack((-x2, x1), axis=-2)
+        half_rot_tensor = ops.reshape(half_rot_tensor, ops.shape(tensor))
+        return (tensor * cos_emb) + (half_rot_tensor * sin_emb)
 
-    def _compute_cos_sin_embedding(self, inputs, start_index=0, positions=None):
+    def _compute_cos_sin_embedding(self, inputs, start_index=0):
+        
+        start_index = ops.cast(start_index, dtype="float32")
+
         feature_axis = len(inputs.shape) - 1
         sequence_axis = 1
 
-        inverse_freq = self._get_inverse_freq(self.output_dim)
+        rotary_dim = ops.shape(inputs)[feature_axis]
+        inverse_freq = self._get_inverse_freq(rotary_dim)
 
-        if positions is None:
-            positions = self._compute_positions(inputs, start_index)
-        else:
-            positions = ops.cast(positions, "float32")
+        seq_len = ops.shape(inputs)[sequence_axis]
+        tensor = ops.arange(seq_len, dtype="float32") + start_index
 
-        freq = ops.einsum("i,j->ij", positions, inverse_freq)
+        freq = ops.einsum("i,j->ij", tensor, inverse_freq)
         embedding = ops.stack((freq, freq), axis=-2)
         embedding = ops.reshape(
             embedding, (*ops.shape(freq)[:-1], ops.shape(freq)[-1] * 2)
@@ -377,76 +385,17 @@ class RotaryEmbedding(keras.layers.Layer):
             {
                 "max_wavelength": self.max_wavelength,
                 "scaling_factor": self.scaling_factor,
-                "output_dim":self.output_dim,
+                "sequence_axis": self.sequence_axis,
+                "feature_axis": self.feature_axis,
             }
         )
         return config
 
     def compute_output_shape(self, input_shape):
-        
-        return input_shape[:2] + (self.output_dim*2,)
-    
+        return input_shape
+
+
 class ReversibleEmbedding(keras.layers.Embedding):
-    """An embedding layer which can project backwards to the input dim.
-
-    This layer is an extension of `keras.layers.Embedding` for language models.
-    This layer can be called "in reverse" with `reverse=True`, in which case the
-    layer will linearly project from `output_dim` back to `input_dim`.
-
-    By default, the reverse projection will use the transpose of the
-    `embeddings` weights to project to `input_dim` (weights are "tied"). If
-    `tie_weights=False`, the model will use a separate, trainable variable for
-    reverse projection.
-
-    This layer has no bias terms.
-
-    Args:
-        input_dim: Integer. Size of the vocabulary,
-            i.e. maximum integer index + 1.
-        output_dim: Integer. Dimension of the dense embedding.
-        tie_weights: Boolean, whether or not the matrix for embedding and
-            the matrix for the `reverse` projection should share the same
-            weights.
-        embeddings_initializer: Initializer for the `embeddings`
-            matrix (see `keras.initializers`).
-        embeddings_regularizer: Regularizer function applied to
-            the `embeddings` matrix (see `keras.regularizers`).
-        embeddings_constraint: Constraint function applied to
-            the `embeddings` matrix (see `keras.constraints`).
-        mask_zero: Boolean, whether or not the input value 0 is a special
-            "padding" value that should be masked out.
-        reverse_dtype: The dtype for the reverse projection computation.
-            Defaults to the `compute_dtype` of the layer.
-        **kwargs: other keyword arguments passed to `keras.layers.Embedding`,
-            including `name`, `trainable`, `dtype` etc.
-
-    Call arguments:
-        inputs: The tensor inputs to the layer.
-        reverse: Boolean. If `True` the layer will perform a linear projection
-            from `output_dim` to `input_dim`, instead of a normal embedding
-            call. Default to `False`.
-
-    Example:
-    ```python
-    batch_size = 16
-    vocab_size = 100
-    hidden_dim = 32
-    seq_length = 50
-
-    # Generate random inputs.
-    token_ids = np.random.randint(vocab_size, size=(batch_size, seq_length))
-
-    embedding = keras_nlp.layers.ReversibleEmbedding(vocab_size, hidden_dim)
-    # Embed tokens to shape `(batch_size, seq_length, hidden_dim)`.
-    hidden_states = embedding(token_ids)
-    # Project hidden states to shape `(batch_size, seq_length, vocab_size)`.
-    logits = embedding(hidden_states, reverse=True)
-    ```
-
-    References:
-    - [Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)
-    - [Press and Wolf, 2016](https://arxiv.org/abs/1608.05859)
-    """
 
     def __init__(
         self,
@@ -484,6 +433,7 @@ class ReversibleEmbedding(keras.layers.Embedding):
             )
 
     def call(self, inputs, reverse=False):
+        
         if reverse:
             if self.tie_weights:
                 kernel = ops.transpose(ops.convert_to_tensor(self.embeddings))
@@ -493,7 +443,7 @@ class ReversibleEmbedding(keras.layers.Embedding):
                 inputs = ops.cast(inputs, self.reverse_dtype)
                 kernel = ops.cast(kernel, self.reverse_dtype)
             return ops.matmul(inputs, kernel)
-
+        
         return super().call(inputs)
 
     def get_config(self):

@@ -261,7 +261,7 @@ class Transformer(object):
     def load_embeddings(self, embeddings):
         """处理Embedding层权重
         """
-        embeddings = embeddings.astype(K.floatx())  # 防止np.average报错
+        embeddings = embeddings.astype(keras.mixed_precision.dtype_policy().name)  # 防止np.average报错
 
         if self.keep_tokens is not None:
             embeddings = embeddings[self.keep_tokens]
@@ -289,7 +289,7 @@ class Transformer(object):
     def create_variable(self, name, value, dtype=None):
         """创建一个变量
         """
-        dtype = dtype or K.floatx()
+        dtype = dtype or keras.mixed_precision.dtype_policy().name
         return K.variable(
             self.initializer(value.shape, dtype), dtype, name=name
         ), value
@@ -361,24 +361,27 @@ class Transformer(object):
                 inputs=inputs,
                 layer=ToppSearch,
                 k=k,
+                dtype='float32',
                 end_token=self.end_token,
-                name='SearchLayer'
+                
             )
         elif mode=='topk':
             return self.apply(
                 inputs=inputs,
                 layer=TopkSearch,
                 k=k,
+                dtype='float32',
                 end_token=self.end_token,
-                name='SearchLayer'
+                
             )
         else:
             return self.apply(
                 inputs=inputs,
                 layer=GreedySearch,
                 k=k,
+                dtype='float32',
                 end_token=self.end_token,
-                name='SearchLayer'
+                
             )
 
     def compute_cache_position_bias(self, inputs=None,self_cache_update_index=None,index=None):
@@ -413,6 +416,7 @@ class LM_Mask(object):
                 inputs=self.inputs[0],
                 layer=Lambda,
                 function=lm_mask,
+                dtype='float32',
                 name='Attention-Mask'
             )
 
@@ -454,7 +458,7 @@ class LM_Mask(object):
                         cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.attention_key_size] 
                     else:
                         cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.num_attention_heads,self.attention_key_size]
-                    caches.append(ops.zeros(cache_shape,dtype=t.dtype))
+                    caches.append(ops.zeros(cache_shape,dtype=keras.mixed_precision.dtype_policy().name))
                 return caches
             def compute_output_shape(self, input_shape):
                 shapes=[]
@@ -468,6 +472,7 @@ class LM_Mask(object):
             caches.extend(self.apply(
                 inputs=inputs,
                 layer=Initial_cache,
+                dtype='float32',
                 single_head=self.single_head,
                 num_attention_heads = self.num_attention_heads,
                 attention_key_size = self.attention_key_size,
@@ -481,6 +486,7 @@ class LM_Mask(object):
     def cache_call(self,inputs:list,input_lengths:list,end_token,
                    search_mode='greedy',k=1,progress_print=True,index_bias=0):
         old_flag = self.custom_position_ids
+        
         if self.is_seq2seq:
             caches = self.initial_cache([inputs[1],inputs[0]])
             key = 1
@@ -488,25 +494,30 @@ class LM_Mask(object):
             caches = self.initial_cache(inputs[:1])
             key = 0
         x = inputs[key]
-        
+
         class start_index(keras.Layer):
             def call(self,x):
                 z = x!=0
                 if index_bias>0:
                     t = ops.ones([ops.shape(z)[0],index_bias],dtype=z.dtype)
                     z = ops.slice_update(z,[0,0],t)
-                return ops.max(ops.sum(z,-1))-1
+                return ops.cast(ops.max(ops.sum(z,-1))-1,'int32')
         
         
         length = input_lengths[key]
         self.cache_attention_bias=None
         self.cache_position_bias=None
+        
+
         self.compute_cache_attention_bias(inputs,key,index=0)
-        self.compute_cache_position_bias(inputs)
+        z = self.apply_embeddings(inputs)
+
+        self.compute_cache_position_bias(z)
+
         self.end_token = end_token
         #initial inputs and cache
 
-        z = self.apply_embeddings(inputs)
+        
 
         if not isinstance(z,list):
             z = [z]
@@ -527,7 +538,9 @@ class LM_Mask(object):
         index = self.apply(
             inputs=x,
             layer=start_index,
+            dtype='float32',
             name='start_index'
+            
         )
         
         def cond(inputs, caches, index , flags):
@@ -539,18 +552,21 @@ class LM_Mask(object):
             if progress_print:
                 
                 print('\r',index,end='')
+
             xs = self.slice_inputs(inputs,key,index)
             self.custom_position_ids = self.get_custom_position_ids()
             new_inputs = self.get_new_inputs(inputs,key,xs,index)
+            
             if self.custom_position_ids:
                 new_inputs += [ops.reshape(index,[-1,1])]
+
             z = self.apply_embeddings(new_inputs)
-            
             if not isinstance(z,list):
                 z = [z]
             attention_mask = self.compute_cache_attention_bias(index=index)
+
             position_bias = self.compute_cache_position_bias(self_cache_update_index = index) 
-            
+
             for i in range(self.num_hidden_layers):
                 
                 layer_caches = caches[i*j:i*j+j]
@@ -563,17 +579,19 @@ class LM_Mask(object):
                 
                 caches[i*j:i*j+j]=cache
             
-
             o = self.apply_final_layers(z)
-            
             index += 1
+
             search_in = [o,index,inputs[key],flags]
+
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
+
             return (inputs, caches, index , flags)
         num_hidden_layers = self.num_hidden_layers
         class WhileLayer(keras.Layer):
             def call(self, x):
                 inputs, caches, index =  x[:]
+
                 flags = ops.ones([ops.shape(caches[0])[0],1],dtype='bool')
                 if backlib=='torch':
                     while cond(inputs, caches, index , flags):
@@ -590,20 +608,24 @@ class LM_Mask(object):
                 return outs[:3]
             def compute_output_shape(self, input_shape):
                 return input_shape
+
         out=self.apply(
             inputs=(inputs, caches, index),
             layer=WhileLayer,
+            dtype='float32',
             name='WhileLayer'
         )
+
         self.custom_position_ids = old_flag
         return ops.cast(out[0][key],'int32')
     def build_cache_model(self,input_lengths:list,end_token,
                           search_mode='greedy',k=1,progress_print=False,index_bias=0):
         
         inputs=self.get_cache_inputs(input_lengths)
-        
+
         out = self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
                        search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+
         model = keras.Model(inputs,out)
         inputs = []
         for modelin in model.inputs: 
@@ -638,7 +660,7 @@ class UniLM_Mask(LM_Mask):
                 inputs=self.inputs[1],
                 layer=Lambda,
                 function=unilm_mask,
-
+                dtype='float32',
                 name='Attention-Mask'
             )
 
@@ -667,17 +689,6 @@ class UniLM_Mask(LM_Mask):
                 name='TakeLayer'
             )
 
-            def unilm_mask(s):
-                idxs = ops.cumsum(s, axis=1)
-                mask = idxs[:, None, :] <= idxs[:, :, None]
-                return mask
-
-            self.attention_bias = self.apply(
-                inputs=self.inputs[1],
-                layer=Lambda,
-                function=unilm_mask,
-                name='Attention-Mask'
-            )
 
         return self.attention_bias
     def slice_inputs(self,inputs,key,index):

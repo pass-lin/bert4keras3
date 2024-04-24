@@ -69,29 +69,28 @@ class GemmaFeedForward(FeedForward):
     def build(self, input_shape):
         super(FeedForward, self).build(input_shape)
         output_dim = input_shape[-1]
-
-        self.i0_dense=keras.layers.EinsumDense(
-                equation="btd,df->btf",
-                output_shape=(None, self.units),
-                activation='linear',
-                kernel_initializer=self.kernel_initializer
-                )
         
-        self.i1_dense=keras.layers.EinsumDense(
-                equation="btd,df->btf",
-                output_shape=(None, self.units),
-                activation='linear',
+        self.i0_dense=keras.layers.Dense(
+            self.units,
+            use_bias=self.use_bias,
+            kernel_initializer=self.kernel_initializer
+            )
+        
+        self.i1_dense=keras.layers.Dense(
+            self.units,
+            use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer
                 )
 
-        self.o_dense = keras.layers.EinsumDense(
-            equation="btf,fd->btd",
-            output_shape=(None, output_dim),
+        self.o_dense = keras.layers.Dense(
+            output_dim,
+            use_bias=self.use_bias,
             kernel_initializer=self.kernel_initializer
         )
+       
     @recompute_grad
     def call(self, inputs):
-        x = keras.activations.gelu(self.i0_dense(inputs), approximate=True)* self.i1_dense(inputs)
+        x = ops.gelu(self.i0_dense(inputs), approximate=True)* self.i1_dense(inputs)
         x = self.o_dense(x)
         return x
     

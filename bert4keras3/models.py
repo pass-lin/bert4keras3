@@ -131,7 +131,7 @@ def build_transformer_model(
                 shape[0] = len(keras.distribution.list_devices())
             except:
                 pass
-            inputs.append(np.zeros(shape,modelin.dtype))
+            inputs.append(np.ones(shape,modelin.dtype))
         transformer.model.predict(inputs,verbose=3)
         if keras_weights_path is not None:
             transformer.model.load_weights(keras_weights_path, skip_mismatch=True)
@@ -140,7 +140,7 @@ def build_transformer_model(
             def enable_lora(t):
                 if isinstance(t,keras.layers.Embedding) :
                     t.enable_lora(kwargs['attention_head_size']*2)
-                elif isinstance(t,keas.layers.Dense):
+                elif isinstance(t,keras.layers.Dense):
                     t.enable_lora(kwargs['attention_head_size'])
             for layer in transformer.model.layers:
                 layer.trainable=False

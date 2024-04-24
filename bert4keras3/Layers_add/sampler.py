@@ -50,7 +50,8 @@ class GreedySearch(SearchBase):
     def call(self, inputs, **kwargs):
         hidden_state,update_index,out_ids,flags = inputs[:]
         
-        y = self.search(hidden_state)
+        y = self.search(hidden_state) 
+        
         t = ops.full_like(y,self.end_token)
         y = ops.where(flags,y,t)
         start = [0,update_index]

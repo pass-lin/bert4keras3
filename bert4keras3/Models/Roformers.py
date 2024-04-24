@@ -7,10 +7,10 @@ class RoFormer(NEZHA):
         if self.cache_position_bias is None:
 
             self.cache_position_bias =self.apply(
-                inputs=inputs[0],
+                inputs=inputs,
                 name='Embedding-Rotary-Position'
             )
-        if inputs!=None:
+        if inputs is not None:
             return None
         self.length_cache_position_bias = self.apply(
             inputs=self.cache_position_bias,

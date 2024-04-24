@@ -106,7 +106,7 @@ class BERT(Transformer):
         return [x,caches]
     def get_cache_inputs(self,lengths:list):
         x_in = self.apply(
-            layer=Input, shape=[lengths[1]], name='Input-Token-cache-'+str(lengths[1])
+            layer=Input, shape=[lengths[0],], name='Input-Token-cache-'+str(lengths[0])
         )
         inputs = [x_in]
 

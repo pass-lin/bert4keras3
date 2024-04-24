@@ -123,7 +123,7 @@ def piecewise_linear(t, schedule, from_zero=True):
     if from_zero and schedule[0][0] != 0:
         schedule = [(0, 0.0)] + schedule
 
-    t = ops.cast(t, K.floatx())
+    t = ops.cast(t, keras.mixed_precision.dtype_policy().name)
     x = (t * 0 + 1) * schedule[0][1]
     for i in range(len(schedule)):
         t_begin = schedule[i][0]
@@ -225,8 +225,8 @@ if use_keras_2:
         shape = tf.broadcast_dynamic_shape(K.shape(cond), shape)
     
         if dtype(x) is None and dtype(y) is None:
-            x = tf.broadcast_to(K.constant(x, dtype=K.floatx()), shape)
-            y = tf.broadcast_to(K.constant(y, dtype=K.floatx()), shape)
+            x = tf.broadcast_to(K.constant(x, dtype=keras.mixed_precision.dtype_policy().name), shape)
+            y = tf.broadcast_to(K.constant(y, dtype=keras.mixed_precision.dtype_policy().name), shape)
         elif dtype(x) is None:
             x = tf.broadcast_to(K.constant(x, dtype=dtype(y)), shape)
         elif dtype(y) is None:
@@ -242,7 +242,38 @@ if use_keras_2:
         return tf.where(cond, x, y)
     ops.where = where
 
+def get_sequence_masking(
+    x, mask=None, value=0, axis=None, bias=None
+):
+    if not (mask is None and bias is None):
+        if mask is None:
+            if K.dtype(bias) == 'bool' or (backlib=='torch' and K.dtype(bias) == torch.bool):
+                mask = bias
+        else:
+            if axis is None:
+                axes = [1]
+            elif isinstance(axis, list):
+                axes = axis
+            else:
+                axes = [axis]
 
+            axes = [axis if axis >= 0 else ops.ndim(x) + axis for axis in axes]
+
+            if K.dtype(mask) != 'bool':
+                mask = ops.cast(mask, 'bool')
+            elif backlib=='torch' and K.dtype(bias) == torch.bool:
+                mask = ops.cast(mask, torch.bool)
+
+            full_mask = align(mask, [0, axes[0]], ops.ndim(x))
+            for axis in axes[1:]:
+                full_mask = full_mask & align(mask, [0, axis], ops.ndim(x))
+
+            mask = full_mask
+            if K.dtype(bias) == 'bool' or (backlib=='torch' and K.dtype(bias) == torch.bool):
+                mask = mask & bias
+    if mask is not None:
+        mask = ops.cast(mask,dtype='int32')
+    return mask
 def sequence_masking(
     x, mask=None, value=0, axis=None, bias=None, return_mask=False
 ):
@@ -328,29 +359,37 @@ def attention_normalize(a, mask=None, axis=-1, method='softmax', bias=None):
     squared_relu：来自 https://arxiv.org/abs/2202.10447 ；
     softmax_plus：来自 https://kexue.fm/archives/8823 。
     """
+    if method == 'softmax-fp32' :
+        mask = get_sequence_masking(a, mask, -np.inf, axis,bias)
+        ori_dtype = a.dtype
+        att_mask = mask
+        for i in range(ops.ndim(a)-ops.ndim(mask)):
+            att_mask = ops.expand_dims(att_mask,0)
+        return ops.cast(keras.layers.Softmax(dtype="float32",axis=axis)(a,mask=att_mask),ori_dtype),mask
     a, mask = sequence_masking(a, mask, -np.inf, axis, bias, True)
+    
     if method == 'softmax' :
-        return ops.softmax(a, axis=axis)
+        return ops.softmax(a,axis=axis),mask
     else:
         if mask is None:
-            l = ops.cast(ops.shape(a)[-1], K.floatx())
+            l = ops.cast(ops.shape(a)[-1], keras.mixed_precision.dtype_policy().name)
         else:
-            mask = ops.cast(mask, K.floatx())
+            mask = ops.cast(mask, keras.mixed_precision.dtype_policy().name)
             l = ops.sum(mask, axis=axis, keepdims=True)
         if method == 'squared_relu':
-            return ops.relu(a)**2 / l
+            return ops.relu(a)**2 / l,mask
         elif method == 'softmax_plus':
             l = ops.maximum(l, 16)  # 极短序列scale反而不好
-            return ops.softmax(a * ops.log(l) / np.log(512), axis=axis)
-    return a
+            return ops.softmax(a * ops.log(l) / np.log(512), axis=axis),mask
+    return a,mask
 
 
 def sinusoidal_embeddings(pos, dim, base=10000):
     """计算pos位置的dim维sinusoidal编码
     """
     assert dim % 2 == 0
-    indices = ops.arange(0, dim // 2, dtype=K.floatx())
-    indices = ops.power(ops.cast(base, K.floatx()), -2 * indices / dim)
+    indices = ops.arange(0, dim // 2, dtype=keras.mixed_precision.dtype_policy().name)
+    indices = ops.power(ops.cast(base, keras.mixed_precision.dtype_policy().name), -2 * indices / dim)
     embeddings = ops.einsum('...,d->...d', pos, indices)
     embeddings = ops.stack([ops.sin(embeddings), ops.cos(embeddings)], axis=-1)
     embeddings = ops.flatten(embeddings, -2)
@@ -365,7 +404,7 @@ class Sinusoidal(keras.initializers.Initializer):
         """Sin-Cos形式的位置向量
         """
         size, dim = shape
-        return sinusoidal_embeddings(ops.arange(size, dtype=K.floatx()), dim)
+        return sinusoidal_embeddings(ops.arange(size, dtype=keras.mixed_precision.dtype_policy().name), dim)
 def align(tensor, axes, ndim=None):
     """重新对齐tensor（批量版expand_dims）
     axes：原来的第i维对齐新tensor的第axes[i]维；
@@ -380,10 +419,13 @@ def align(tensor, axes, ndim=None):
     if keras.__version__>'3.0' and os.environ["KERAS_BACKEND"] != "jax":
         return tensor[indices]
     return tensor[tuple(indices)]
-def _apply_rotary_pos_emb(tensor, cos_emb, sin_emb):
+def _apply_rotary_pos_emb( tensor, cos_emb, sin_emb):
+        
     x1, x2 = ops.split(tensor, 2, axis=-1)
     half_rot_tensor = ops.stack((-x2, x1), axis=-2)
+    
     half_rot_tensor = ops.reshape(half_rot_tensor, ops.shape(tensor))
+    
     return (tensor * cos_emb) + (half_rot_tensor * sin_emb)
 
 def apply_rotary_position_embeddings(sinusoidal, *tensors):
@@ -397,15 +439,6 @@ def apply_rotary_position_embeddings(sinusoidal, *tensors):
     ]), 'all tensors must have the same shape'
     ndim = ops.ndim(tensors[0])
     sinusoidal = align(sinusoidal, [0, 1, -1], ndim)
-    if int_shape(tensors[0])[-1]!=int_shape(sinusoidal)[-1]:
-
-        dims = sinusoidal.shape[-1]
-        cos_pos = sinusoidal[..., :dims//2]
-        sin_pos = sinusoidal[..., dims//2:]
-        outputs = []
-        for tensor in tensors:
-            outputs.append(_apply_rotary_pos_emb(tensor, cos_pos, sin_pos))
-        return outputs[0] if len(outputs) == 1 else outputs
     cos_pos = ops.repeat(sinusoidal[..., 1::2], 2, -1)
     sin_pos = ops.repeat(sinusoidal[..., ::2], 2, -1)
     outputs = []
@@ -414,8 +447,20 @@ def apply_rotary_position_embeddings(sinusoidal, *tensors):
         tensor2 = ops.reshape(tensor2, ops.shape(tensor))
         outputs.append(tensor * cos_pos + tensor2 * sin_pos)
     return outputs[0] if len(outputs) == 1 else outputs
-
-
+def apply_rotary_position_embeddings_keras(sinusoidal, inputs):
+    ndim = ops.ndim(inputs)
+    sinusoidal = align(sinusoidal, [0, 1, -1], ndim)
+    dims = sinusoidal.shape[-1]
+    cos_emb = sinusoidal[..., :dims//2]
+    sin_emb = sinusoidal[..., dims//2:]
+    inputs = ops.moveaxis(
+            inputs, (-1, 1), (-1, 1)
+        )
+    
+    output = _apply_rotary_pos_emb(inputs, cos_emb, sin_emb)
+    return ops.moveaxis(
+            output, (-1, 1), (-1, 1)
+        )
 def multilabel_categorical_crossentropy(y_true, y_pred):
     """多标签分类的交叉熵
     说明：

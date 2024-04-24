@@ -117,7 +117,7 @@ class GlobalAveragePooling1D(keras.layers.GlobalAveragePooling1D):
     def call(self, inputs, mask=None):
         axis = 1 if self.data_format == 'channels_last' else 2
         if mask is not None:
-            mask = ops.cast(mask, K.floatx())
+            mask = ops.cast(mask, keras.mixed_precision.dtype_policy().name)
             mask = mask[..., None] if axis == 1 else mask[:, None]
             return ops.sum(inputs * mask, axis=axis) / ops.sum(mask, axis=axis)
         else:
@@ -298,6 +298,27 @@ class Loss(Layer):
         base_config = super(Loss, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+def Input(
+    shape=None,
+    batch_size=None,
+    dtype=None,
+    sparse=None,
+    batch_shape=None,
+    name=None,
+    tensor=None,
+    ):
+    if dtype==None:
+        dtype='float32'
+    return keras.Input(
+            shape=shape,
+            batch_size=batch_size,
+            dtype=dtype,
+            sparse=sparse,
+            batch_shape=batch_shape,
+            name=name,
+            tensor=tensor,
+            )
+keras.layers.Input = Input
 
 custom_objects = {
     'Embedding': Embedding,

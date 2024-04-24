@@ -1,14 +1,30 @@
 from bert4keras3.Models.Roformers import *
 class Gemma(LM_Mask,RoFormer):
-    def __init__(self, with_lm=True,**kwargs):
+    def __init__(self, with_lm=True,
+                 max_wavelength=10_000.0,
+                 scaling_factor=1.0,
+                 use_dense_bias=False,
+                 use_EinsumDense = True,
+                 flatten_o_dense=False,
+                 use_bias = False,
+                 **kwargs):
         super(Gemma, self).__init__(**kwargs)
         self.with_lm = with_lm
+        self.max_wavelength = max_wavelength
+        self.scaling_factor = scaling_factor
+        self.use_dense_bias = use_dense_bias
+        self.flatten_o_dense = flatten_o_dense
+        self.use_EinsumDense = use_EinsumDense
+        self.use_bias = use_bias
     def apply_embeddings(self, inputs):
         inputs = inputs[:]
+        
         x = inputs.pop(0)
+        
         if self.segment_vocab_size > 0:
             s = inputs.pop(0)
-
+        inputs = x
+        
         x = self.apply(
             inputs=x,
             layer=Embedding,
@@ -23,6 +39,7 @@ class Gemma(LM_Mask,RoFormer):
             mask_zero=True,
             name='Embedding-Token'
         )
+        
         if self.segment_vocab_size > 0:
             s = self.apply(
                 inputs=s,
@@ -55,30 +72,24 @@ class Gemma(LM_Mask,RoFormer):
         
         return x
     
-    def compute_position_bias(self, x=None):
-        """Sinusoidal位置编码（直接返回）
-        """
-        if self.position_bias is None:
-            self.position_bias = self.apply(
-                inputs=x,
-                layer=RotaryEmbedding,
-                output_dim=self.attention_key_size,
-                name='Embedding-Rotary-Position'
-            )
 
-        return self.position_bias
     
     def apply_main_layers(self, inputs, index):
-
-        x = inputs
+        
+        if isinstance(inputs,list):
+            x = inputs[0]
+        else:
+            x = inputs
 
         attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
         feed_forward_name = 'Transformer-%d-FeedForward' % index
         attention_mask = self.compute_attention_bias(index)
+
         position_bias = self.compute_position_bias(x)
 
         # Self Attention
         xi = x
+
         x = self.apply(
             inputs=x,
             layer=RMSNormalization,
@@ -99,8 +110,14 @@ class Gemma(LM_Mask,RoFormer):
             head_size=self.attention_head_size,
             query_head=self.query_head,
             out_dim=self.hidden_size,
-            use_EinsumDense = True,
-            use_bias=True,
+            use_EinsumDense = self.use_EinsumDense,
+            use_bias= self.use_bias,
+            normalization='softmax-fp32',
+            flatten_o_dense = self.flatten_o_dense,
+            rope_mode='keras',
+            max_wavelength = self.max_wavelength,
+            scaling_factor = self.scaling_factor,
+            o_bias = self.o_bias,
             key_size=self.attention_key_size,
             attention_dropout=self.attention_dropout_rate,
             kernel_initializer=self.initializer,
@@ -115,7 +132,6 @@ class Gemma(LM_Mask,RoFormer):
         x = self.apply(
             inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
         )
-
         # Feed Forward
         xi = x
 
@@ -125,12 +141,12 @@ class Gemma(LM_Mask,RoFormer):
             epsilon=1e-6,
             name='%s-Norm' % feed_forward_name
         )
-        
         x = self.apply(
             inputs=x,
             layer=GemmaFeedForward,
             units=self.intermediate_size,
             activation=self.hidden_act,
+            use_bias=self.use_dense_bias,
             kernel_initializer=self.initializer,
             name=feed_forward_name
         )
@@ -143,12 +159,14 @@ class Gemma(LM_Mask,RoFormer):
         x = self.apply(
             inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
         )
-
         return x
     def apply_final_layers(self, inputs):
         """剩余部分
         """
-        x = inputs
+        if isinstance(inputs,list):
+            x = inputs[0]
+        else:
+            x = inputs
 
         x = self.apply(
             inputs=x,
@@ -177,6 +195,7 @@ class Gemma(LM_Mask,RoFormer):
                     activation=lm_activation,
                     name='Output-LM-Activation'
                 )
+        
         return x
     def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
                                 cross_cache_update_index=None,
@@ -202,6 +221,7 @@ class Gemma(LM_Mask,RoFormer):
             arguments=arguments,
             name=attention_name
         )
+        
         caches[0] = cache
         x = self.apply(
             inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
@@ -220,6 +240,6 @@ class Gemma(LM_Mask,RoFormer):
             inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
         )
         
-
+        
         return [x,caches]
 
