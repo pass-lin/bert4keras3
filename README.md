@@ -89,7 +89,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || Gemma-2b-it| [百度网盘](https://pan.baidu.com/s/1fJ_5HB0yg7QNhi40_TyyKQ?pwd=5v5i) 提取码：5v5i|  √|BF16|SpTokenizer|
 || Gemma1.1-2b-it| [百度网盘](https://pan.baidu.com/s/1cO0u8LJigaRjqYL6kNp5Eg?pwd=wwxj) 提取码：wwxj|  √|BF16|SpTokenizer|
 ||Gemma-7b| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
-|| Gemma-7b-Code| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
+|| Gemma-7b-Code| [百度网盘](https://pan.baidu.com/s/1Wibw0Jp8SVGtHhsJRVbeag?pwd=vsk8) 提取码：vsk8|  √|BF16|SpTokenizer|
 || Gemma-7b-it| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
 || Gemma1.1-7b-it| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
 || Gemma-7b-it-Code| [百度网盘]() 提取码：|  √|BF16|SpTokenizer|
