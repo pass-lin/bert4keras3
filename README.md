@@ -93,10 +93,11 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || Gemma-7b-it| [百度网盘](https://pan.baidu.com/s/16HUPKV6nlMU65TwgBQXgog?pwd=h1me) 提取码：h1me|  √|BF16|SpTokenizer|
 || Gemma1.1-7b-it| [百度网盘](https://pan.baidu.com/s/1UZU1u9tK4ZYYaAucbwoyrA?pwd=f1rr) 提取码：f1rr|  √|BF16|SpTokenizer|
 || Gemma-7b-it-Code| [百度网盘](https://pan.baidu.com/s/1RbhV6K8xblhYh2Ha1YZmBQ?pwd=b427) 提取码：b427|  √|BF16|SpTokenizer|
-|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-||Yi-6B-it | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-||Llama3-8B | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-||Llama3-8B-it | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [百度网盘](https://pan.baidu.com/s/192ftWGc64CyNa5UHZkXwwA?pwd=q2ft) 提取码：q2ft|  √|BF16|AutoTokenizer|
+||Yi-6B-it | [百度网盘](https://pan.baidu.com/s/1klsfNCJzA3wXAFTLsFejZQ?pwd=mp4f) 提取码：mp4f|  √|BF16|AutoTokenizer|
+||Yi-9B | [百度网盘](https://pan.baidu.com/s/1H6n7a49EgdQ2QmG4B8Yi6A?pwd=p4kg) 提取码：p4kg|  √|BF16|AutoTokenizer|
+||Llama3-8B | [百度网盘](https://pan.baidu.com/s/1HW8WUQsTK9gORTTFQOo93g?pwd=sk8n) 提取码：sk8n|  √|BF16|AutoTokenizer|
+||Llama3-8B-it | [百度网盘](https://pan.baidu.com/s/1so6-DYAuoMIHTCNVGGhfYw?pwd=rd7a) 提取码：rd7a|  √|BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [百度网盘](https://pan.baidu.com/s/1sAc7ML0YzG8j-hogtl3h2A?pwd=2rju) 提取码：2rju|  √|BF16|AutoTokenizer|
 || Qwen-0.5B-it| [百度网盘](https://pan.baidu.com/s/19iOhprfo7ml7NF43jTtkLA?pwd=ak3d) 提取码：ak3d|  √|BF16|AutoTokenizer|
 || Qwen-1.8B| [百度网盘](https://pan.baidu.com/s/17_pcTakiYdQfpMOLoEBV2A?pwd=x3j9) 提取码：x3j9|  √|BF16|AutoTokenizer|
