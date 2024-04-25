@@ -115,3 +115,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 增加了lora支持，可以通过设置os.environ["ENABLE_LORA"]='1' 启动lora训练，注意的是除了lora之外的参数全部会被冻结  
 增加了flash-attention支持，可以通过设置os.environ["FLASH_ATTN"]='1'使用flash-attention  
 但是需要注意的是，tensorflow不支持。而jax在https://github.com/nshepperd/flash_attn_jax/releases 下载，torch则是 https://github.com/Dao-AILab/flash-attention  
+
+## 4.25号更新，发布1.3版本  
+重新整理了苏神的代码,更新了对 Gemma,Qwen,和llama系列模型（llama3和Yi）的支持，转换了UMT5，FlanT5的权重，并且提供了转换脚本，大家可以自行转换权重
+
