@@ -105,7 +105,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || Qwen-1.8B-it| [百度网盘](https://pan.baidu.com/s/1z0uTOEjG006jIjTSFu9tvw?pwd=indg) 提取码：indg|  √|BF16|AutoTokenizer|
 || Qwen-4B| [百度网盘](https://pan.baidu.com/s/1IeINGv5gAKZUajDnAHUAlg?pwd=4m2q) 提取码：4m2q|  √|BF16|AutoTokenizer|
 || Qwen-4B-it| [百度网盘](https://pan.baidu.com/s/1_aIttv66J6RNCoYWRcd2lQ?pwd=6yuw) 提取码：6yuw|  √|BF16|AutoTokenizer|
-|| Qwen-7B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen-7B| [百度网盘](https://pan.baidu.com/s/1c0ifemUKUxnIJA_ia4kcnQ?pwd=7ptp) 提取码：7ptp|  √|BF16|AutoTokenizer|
 || Qwen-7B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 
 <strong>注意事项</strong>
