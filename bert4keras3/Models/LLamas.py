@@ -7,15 +7,23 @@ class Gemma(LM_Mask,RoFormer):
                  use_EinsumDense = True,
                  flatten_o_dense=False,
                  use_bias = False,
+                 input_scale =True,
+                 share_emebding=True,
+                 rope_mode='keras',
                  **kwargs):
         super(Gemma, self).__init__(**kwargs)
         self.with_lm = with_lm
         self.max_wavelength = max_wavelength
         self.scaling_factor = scaling_factor
+        self.rope_mode = rope_mode
+        self.share_emebding = share_emebding
         self.use_dense_bias = use_dense_bias
+        self.input_scale = input_scale
         self.flatten_o_dense = flatten_o_dense
         self.use_EinsumDense = use_EinsumDense
         self.use_bias = use_bias
+        self.layer_norm_type = RMSNormalization
+        self.ffn_type = GemmaFeedForward
     def apply_embeddings(self, inputs):
         inputs = inputs[:]
         
@@ -55,12 +63,13 @@ class Gemma(LM_Mask,RoFormer):
 
         def mul(x):
             return x * ops.cast(ops.sqrt(self.hidden_size), x.dtype)
-        x = self.apply(
-            inputs=x,
-            layer=Lambda,
-            function=mul,
-            name='Multiply'
-        )
+        if self.input_scale:
+            x = self.apply(
+                inputs=x,
+                layer=Lambda,
+                function=mul,
+                name='Multiply'
+            )
 
         x = self.apply(
             inputs=x,
@@ -92,7 +101,7 @@ class Gemma(LM_Mask,RoFormer):
 
         x = self.apply(
             inputs=x,
-            layer=RMSNormalization,
+            layer=self.layer_norm_type,
             epsilon=1e-6,
             name='%s-Norm' % attention_name
         )
@@ -137,19 +146,11 @@ class Gemma(LM_Mask,RoFormer):
 
         x = self.apply(
             inputs=x,
-            layer=RMSNormalization,
+            layer=self.layer_norm_type,
             epsilon=1e-6,
             name='%s-Norm' % feed_forward_name
         )
-        x = self.apply(
-            inputs=x,
-            layer=GemmaFeedForward,
-            units=self.intermediate_size,
-            activation=self.hidden_act,
-            use_bias=self.use_dense_bias,
-            kernel_initializer=self.initializer,
-            name=feed_forward_name
-        )
+        x = self.apply_ffn(x,feed_forward_name)
         x = self.apply(
             inputs=x,
             layer=Dropout,
@@ -170,7 +171,7 @@ class Gemma(LM_Mask,RoFormer):
 
         x = self.apply(
             inputs=x,
-            layer=RMSNormalization,
+            layer=self.layer_norm_type,
             epsilon=1e-6,
             name='Output-Norm'
         )
@@ -183,19 +184,42 @@ class Gemma(LM_Mask,RoFormer):
         
         if self.with_lm:
             lm_activation = 'softmax' if self.with_lm is True else self.with_lm
-            x = self.apply(
+            if self.share_emebding:
+                x = self.apply(
+                        inputs=x,
+                        layer=Embedding,
+                        arguments={'mode': 'dense'},
+                        name='Embedding-Token'
+                    )
+                x = self.apply(
+                        inputs=x,
+                        layer=Activation,
+                        activation=lm_activation,
+                        name='Output-LM-Activation'
+                    )
+            else:
+                x = self.apply(
                     inputs=x,
-                    layer=Embedding,
-                    arguments={'mode': 'dense'},
-                    name='Embedding-Token'
-                )
-            x = self.apply(
-                    inputs=x,
-                    layer=Activation,
+                    layer=Dense,
+                    units=self.vocab_size,
                     activation=lm_activation,
-                    name='Output-LM-Activation'
+                    use_bias=False,
+                    kernel_initializer=self.initializer,
+                    name='Decoder-Output-LM'
                 )
+
         
+        return x
+    def apply_ffn(self,x,feed_forward_name):
+        x = self.apply(
+            inputs=x,
+            layer=self.ffn_type,
+            units=self.intermediate_size,
+            activation=self.hidden_act,
+            use_bias=self.use_dense_bias,
+            kernel_initializer=self.initializer,
+            name=feed_forward_name
+        )
         return x
     def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
                                 cross_cache_update_index=None,
@@ -243,3 +267,11 @@ class Gemma(LM_Mask,RoFormer):
         
         return [x,caches]
 
+class Llama(Gemma):
+    def __init__(self, input_scale =False,use_EinsumDense=False,
+                 share_emebding=False,**kwargs):
+        super(Llama, self).__init__(input_scale=input_scale,
+                                    use_EinsumDense=use_EinsumDense,
+                                    share_emebding=share_emebding,**kwargs)
+        self.layer_norm_type = LlamaLayerNorm
+        self.ffn_type = LLamaFeedForward

@@ -93,7 +93,9 @@ def build_transformer_model(
         'mt5.1.1_encoder': T5_Encoder,
         'mt5.1.1_decoder': T5_Decoder,
         'gemma':Gemma,
-
+        'llama':Llama, 
+        'qwen':Llama, 
+        'yi':Llama, 
         'misakat5':MisakaT5,
     }
 

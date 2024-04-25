@@ -13,6 +13,7 @@ class FeedForward(Layer):
         activation='relu',
         use_bias=True,
         kernel_initializer='glorot_uniform',
+
         **kwargs
     ):
         super(FeedForward, self).__init__(**kwargs)
@@ -98,34 +99,35 @@ class LLamaFeedForward(FeedForward):
     def build(self, input_shape):
         super(FeedForward, self).build(input_shape)
         output_dim = input_shape[-1]
-        self._feedforward_intermediate_dense = keras.layers.Dense(
-            self.units,
-            kernel_initializer=self.kernel_initializer,
-            use_bias=self.use_bias,
-            name="feedforward_intermediate_dense",
-        )
         self._feedforward_gate_dense = keras.layers.Dense(
             self.units,
             kernel_initializer=self.kernel_initializer,
             use_bias=self.use_bias,
             name="feedforward_gate_dense",
         )
+        self._feedforward_intermediate_dense = keras.layers.Dense(
+            self.units,
+            kernel_initializer=self.kernel_initializer,
+            use_bias=self.use_bias,
+            name="feedforward_intermediate_dense",
+        )
+        
 
         self._feedforward_output_dense = keras.layers.Dense(
             output_dim,
             kernel_initializer=self.kernel_initializer,
-            use_bias=False,
-            dtype=self.use_bias,
+            use_bias=self.use_bias,
             name="feedforward_output_dense",
         )
     @recompute_grad
     def call(self, x):
+
         activation = activations.get(self.activation[0])
         gate_output = self._feedforward_gate_dense(x)
-        gate_output = ops.cast(gate_output, "float32")
+        #gate_output = ops.cast(gate_output, "float32")
         gate_output = activation(gate_output)
-        gate_output = ops.cast(gate_output, x.dtype)
+        #gate_output = ops.cast(gate_output, x.dtype)
         x = self._feedforward_intermediate_dense(x)
         x = self._feedforward_output_dense(ops.multiply(x, gate_output))
-        return x
+        return x#
 

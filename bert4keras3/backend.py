@@ -365,11 +365,11 @@ def attention_normalize(a, mask=None, axis=-1, method='softmax', bias=None):
         att_mask = mask
         for i in range(ops.ndim(a)-ops.ndim(mask)):
             att_mask = ops.expand_dims(att_mask,0)
-        return ops.cast(keras.layers.Softmax(dtype="float32",axis=axis)(a,mask=att_mask),ori_dtype),mask
+        return ops.cast(keras.layers.Softmax(dtype="float32",axis=axis)(a,mask=att_mask),ori_dtype)
     a, mask = sequence_masking(a, mask, -np.inf, axis, bias, True)
     
     if method == 'softmax' :
-        return ops.softmax(a,axis=axis),mask
+        return ops.softmax(a,axis=axis)
     else:
         if mask is None:
             l = ops.cast(ops.shape(a)[-1], keras.mixed_precision.dtype_policy().name)
@@ -377,11 +377,11 @@ def attention_normalize(a, mask=None, axis=-1, method='softmax', bias=None):
             mask = ops.cast(mask, keras.mixed_precision.dtype_policy().name)
             l = ops.sum(mask, axis=axis, keepdims=True)
         if method == 'squared_relu':
-            return ops.relu(a)**2 / l,mask
+            return ops.relu(a)**2 / l
         elif method == 'softmax_plus':
             l = ops.maximum(l, 16)  # 极短序列scale反而不好
-            return ops.softmax(a * ops.log(l) / np.log(512), axis=axis),mask
-    return a,mask
+            return ops.softmax(a * ops.log(l) / np.log(512), axis=axis)
+    return a
 
 
 def sinusoidal_embeddings(pos, dim, base=10000):

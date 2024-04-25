@@ -173,7 +173,7 @@ class MultiHeadAttention(Layer):
             o = self.o_dense(ops.reshape(o, [b,s,-1]))
         # 返回结果
          
-        
+
         if use_cache:
             return o,cache
         if self.return_attention_scores:
@@ -282,17 +282,18 @@ class MultiHeadAttention(Layer):
             a = a * ops.cast(1/np.sqrt(self.key_size), dtype=qw.dtype)
         if a_bias is not None and ops.ndim(a_bias) == 3:
             a_bias = align(a_bias, [0, -2, -1], ops.ndim(a))
-        
-        A,mask = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
+        A = attention_normalize(a, v_mask, -1, self.normalization, a_bias)
         
         if self.attention_dropout:
-            A,mask = self.dropout(A)
+            A = self.dropout(A)
+
         # 完成输出
         if self.query_head!=self.heads:
             o = ops.einsum("bkgts,bskh->btkgh", A, vw)
             o = ops.reshape(o, (b, s, self.query_head, -1))
         else:
             o = ops.einsum('bhjk,bkhd->bjhd', A, vw)
+        
         if p_bias == 'typical_relative':
             o = o + ops.einsum('bhjk,jkd->bjhd', A, position_bias)
 
