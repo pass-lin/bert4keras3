@@ -95,8 +95,9 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || Gemma-7b-it-Code| [百度网盘](https://pan.baidu.com/s/1RbhV6K8xblhYh2Ha1YZmBQ?pwd=b427) 提取码：b427|  √|BF16|SpTokenizer|
 |[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  | | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 || | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  | | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [百度网盘](https://pan.baidu.com/s/1sAc7ML0YzG8j-hogtl3h2A?pwd=2rju) 提取码：2rju|  √|BF16|AutoTokenizer|
+|| Qwen-0.5B-it| [百度网盘](https://pan.baidu.com/s/19iOhprfo7ml7NF43jTtkLA?pwd=ak3d) 提取码：ak3d|  √|BF16|AutoTokenizer|
+|| Qwen-| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
