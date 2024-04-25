@@ -97,6 +97,10 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 || | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [百度网盘](https://pan.baidu.com/s/1sAc7ML0YzG8j-hogtl3h2A?pwd=2rju) 提取码：2rju|  √|BF16|AutoTokenizer|
 || Qwen-0.5B-it| [百度网盘](https://pan.baidu.com/s/19iOhprfo7ml7NF43jTtkLA?pwd=ak3d) 提取码：ak3d|  √|BF16|AutoTokenizer|
+|| Qwen-1.8B| [百度网盘](https://pan.baidu.com/s/17_pcTakiYdQfpMOLoEBV2A?pwd=x3j9) 提取码：x3j9|  √|BF16|AutoTokenizer|
+|| Qwen-1.8B-it| [百度网盘](https://pan.baidu.com/s/1z0uTOEjG006jIjTSFu9tvw?pwd=indg) 提取码：indg|  √|BF16|AutoTokenizer|
+|| Qwen-4B| [百度网盘](https://pan.baidu.com/s/1IeINGv5gAKZUajDnAHUAlg?pwd=4m2q) 提取码：4m2q|  √|BF16|AutoTokenizer|
+|| Qwen-4B-it| [百度网盘](https://pan.baidu.com/s/1_aIttv66J6RNCoYWRcd2lQ?pwd=6yuw) 提取码：6yuw|  √|BF16|AutoTokenizer|
 || Qwen-| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 
 <strong>注意事项</strong>
