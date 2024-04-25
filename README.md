@@ -98,7 +98,7 @@ https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
 - 注2：下载下来的ELECTRA权重，如果没有json配置文件的话，参考<a href="https://github.com/ymcui/Chinese-ELECTRA/issues/3">这里</a>自己改一个（需要加上`type_vocab_size`字段）。(苏神注)
 - 注3： 模型分类这里会跳转到使用的example
-- 注4：SpTokenizer指的是bert4keras3.tokenizers.SpTokenizer
+- 注4：SpTokenizer指的是bert4keras3.tokenizers.SpTokenizer,AutoTokenizer指的是transformers的分词器。用法不同需要注意  
 - 注5：因为不能转换全部的权重，所以我提供了转化权重的脚本，有需要自己去转。
 # 版本更新
 ## 2023.12.30发布bert4keras3的第一个版本1.0 
