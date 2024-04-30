@@ -1,11 +1,78 @@
-# 目录
-@[TOC]
+
+#目录
+- [api说明](#api说明)
+  - [bert4keras3.tokenizers](#bert4keras3tokenizers)
+    - [Tokenizer类\[同时支持bert4keras\]](#tokenizer类同时支持bert4keras)
+      - [Tokenizer.encode方法](#tokenizerencode方法)
+      - [Tokenizer.decode方法](#tokenizerdecode方法)
+    - [SpTokenizer类\[同时支持bert4keras\]](#sptokenizer类同时支持bert4keras)
+  - [bert4keras3.ops](#bert4keras3ops)
+  - [bert4keras3.snippets](#bert4keras3snippets)
+    - [bert4keras3.sequence\_padding函数\[同时支持bert4keras\]](#bert4keras3sequence_padding函数同时支持bert4keras)
+    - [bert4keras3.DataGenerator函数\[同时支持bert4keras\]](#bert4keras3datagenerator函数同时支持bert4keras)
+- [bert4keras3.layers](#bert4keras3layers)
+    - [bert4keras3.layers.LayerNorms.ScaleOffset\[同时支持bert4keras\]](#bert4keras3layerslayernormsscaleoffset同时支持bert4keras)
+      - [bert4keras3.layers.LayerNorms.LayerNormalization\[同时支持bert4keras\]](#bert4keras3layerslayernormslayernormalization同时支持bert4keras)
+      - [bert4keras3.layers.LayerNorms.RMSNormalization](#bert4keras3layerslayernormsrmsnormalization)
+      - [bert4keras3.layers.LayerNorms.LlamaLayerNorm](#bert4keras3layerslayernormsllamalayernorm)
+    - [bert4keras3.layers.FFN](#bert4keras3layersffn)
+      - [bert4keras3.layers.FFN.FeedForward\[同时支持bert4keras\]](#bert4keras3layersffnfeedforward同时支持bert4keras)
+      - [bert4keras3.layers.FFN.GemmaFeedForward](#bert4keras3layersffngemmafeedforward)
+      - [bert4keras3.layers.FFN.LLamaFeedForward](#bert4keras3layersffnllamafeedforward)
+    - [bert4keras3.layers.Embeddings](#bert4keras3layersembeddings)
+      - [bert4keras3.layers.Embeddings.PositionEmbedding\[同时支持bert4keras\]](#bert4keras3layersembeddingspositionembedding同时支持bert4keras)
+      - [bert4keras3.layers.Embeddings.SinusoidalPositionEmbedding\[同时支持bert4keras\]](#bert4keras3layersembeddingssinusoidalpositionembedding同时支持bert4keras)
+      - [bert4keras3.layers.Embeddings.RelativePositionEmbedding\[同时支持bert4keras\]](#bert4keras3layersembeddingsrelativepositionembedding同时支持bert4keras)
+      - [bert4keras3.layers.Embeddings.RelativePositionEmbeddingT5\[同时支持bert4keras\]](#bert4keras3layersembeddingsrelativepositionembeddingt5同时支持bert4keras)
+      - [bert4keras3.layers.Embeddings.RotaryEmbedding](#bert4keras3layersembeddingsrotaryembedding)
+      - [bert4keras3.layers.Embeddings.Embedding](#bert4keras3layersembeddingsembedding)
+    - [bert4keras3.layers.GP](#bert4keras3layersgp)
+      - [bert4keras3.layers.GP.GlobalPointer](#bert4keras3layersgpglobalpointer)
+    - [bert4keras3.layers.Attentions](#bert4keras3layersattentions)
+      - [bert4keras3.layers.Attentions.MultiHeadAttention\[同时支持bert4keras\]](#bert4keras3layersattentionsmultiheadattention同时支持bert4keras)
+      - [bert4keras3.layers.Attentions.GatedAttentionUnit\[同时支持bert4keras\]](#bert4keras3layersattentionsgatedattentionunit同时支持bert4keras)
+  - [bert4keras3.backend](#bert4keras3backend)
+    - [启动Lora](#启动lora)
+    - [启动Flash-attention](#启动flash-attention)
+    - [启动tf.keras\[同时支持bert4keras\]](#启动tfkeras同时支持bert4keras)
+    - [bert4keras3.backend.flatten\[同时支持bert4keras\]](#bert4keras3backendflatten同时支持bert4keras)
+    - [bert4keras3.backend.sequence\_masking\[同时支持bert4keras\]](#bert4keras3backendsequence_masking同时支持bert4keras)
+    - [bert4keras3.backend.divisible\_temporal\_padding\[同时支持bert4keras\]](#bert4keras3backenddivisible_temporal_padding同时支持bert4keras)
+    - [bert4keras3.backend.root\_mean\_square\[同时支持bert4keras\]](#bert4keras3backendroot_mean_square同时支持bert4keras)
+    - [bert4keras3.backend.sinusoidal\_embeddings\[同时支持bert4keras\]](#bert4keras3backendsinusoidal_embeddings同时支持bert4keras)
+    - [bert4keras3.backend.align\[同时支持bert4keras\]](#bert4keras3backendalign同时支持bert4keras)
+    - [bert4keras3.backend.apply\_rotary\_position\_embeddings\[同时支持bert4keras\]](#bert4keras3backendapply_rotary_position_embeddings同时支持bert4keras)
+    - [bert4keras3.backend.multilabel\_categorical\_crossentropy\[同时支持bert4keras\]](#bert4keras3backendmultilabel_categorical_crossentropy同时支持bert4keras)
+    - [bert4keras3.backend.multilabel\_categorical\_crossentropy\[同时支持bert4keras\]](#bert4keras3backendmultilabel_categorical_crossentropy同时支持bert4keras-1)
+  - [bert4keras3.models](#bert4keras3models)
+    - [bert4keras3.models.extend\_with\_language\_model\[同时支持bert4keras\]](#bert4keras3modelsextend_with_language_model同时支持bert4keras)
+    - [bert4keras3.models.extend\_with\_unified\_language\_model\[同时支持bert4keras\]](#bert4keras3modelsextend_with_unified_language_model同时支持bert4keras)
+    - [bert4keras3.models.Transformer\[同时支持bert4keras\]](#bert4keras3modelstransformer同时支持bert4keras)
+    - [bert4keras3.models.Transformer\[同时支持bert4keras\]](#bert4keras3modelstransformer同时支持bert4keras-1)
+    - [bert4keras3.models.BERT\[同时支持bert4keras\]](#bert4keras3modelsbert同时支持bert4keras)
+    - [bert4keras3.models.NEZHA\[同时支持bert4keras\]](#bert4keras3modelsnezha同时支持bert4keras)
+    - [bert4keras3.models.ELECTRA\[同时支持bert4keras\]](#bert4keras3modelselectra同时支持bert4keras)
+    - [bert4keras3.models.ALBERT\[同时支持bert4keras\]](#bert4keras3modelsalbert同时支持bert4keras)
+    - [bert4keras3.models.ALBERT\_Unshared\[同时支持bert4keras\]](#bert4keras3modelsalbert_unshared同时支持bert4keras)
+    - [bert4keras3.models.GPT\[同时支持bert4keras\]](#bert4keras3modelsgpt同时支持bert4keras)
+    - [bert4keras3.models.GPT2\[同时支持bert4keras\]](#bert4keras3modelsgpt2同时支持bert4keras)
+    - [bert4keras3.models.GPT2\_ML\[同时支持bert4keras\]](#bert4keras3modelsgpt2_ml同时支持bert4keras)
+    - [bert4keras3.models.GAU\_alpha\[同时支持bert4keras\]](#bert4keras3modelsgau_alpha同时支持bert4keras)
+    - [bert4keras3.models.RoFormer\[同时支持bert4keras\]](#bert4keras3modelsroformer同时支持bert4keras)
+    - [bert4keras3.models.RoFormerV2\[同时支持bert4keras\]](#bert4keras3modelsroformerv2同时支持bert4keras)
+    - [bert4keras3.models.Gemma](#bert4keras3modelsgemma)
+    - [bert4keras3.models.Llama](#bert4keras3modelsllama)
+    - [Qwen 模型](#qwen-模型)
+    - [bert4keras3.models.T5\_Encoder\[同时支持bert4keras\]](#bert4keras3modelst5_encoder同时支持bert4keras)
+    - [bert4keras3.models.T5\_Decoder\[同时支持bert4keras\]](#bert4keras3modelst5_decoder同时支持bert4keras)
+    - [bert4keras3.models.T5\[同时支持bert4keras\]](#bert4keras3modelst5同时支持bert4keras)
+
 # api说明
-由于希望能同时把本文档作为bert4keras的文档使用，对于同时支持bert4keras和bert4keras3的部分我会用*表示
+为了能同时兼容bert4keras文档的功能，如果bert4keras也支持的内容我会额外标注。但是需要注意的是，所有涉及kv cache的部分bert4keras都是不支持的
 ## bert4keras3.tokenizers
 
 这一部分主要沿用bert4keras时苏神的实现，对于新的大模型建议使用transformers的AutoTokenizer
-### Tokenizer类
+### Tokenizer类[同时支持bert4keras]
 
 ```python
 Tokenizer(
@@ -59,7 +126,7 @@ Tokenizer.decode(
 ids：一个一维的列表，由token组成
 return:返回token对应的文字
 
-### SpTokenizer类
+### SpTokenizer类[同时支持bert4keras]
 SpTokenizer是T5模型使用的分词器(就是那些.model结尾的文件)  
 使用他需要先安装sentencepiece
 ```
@@ -87,7 +154,7 @@ word = tokenizer.decode([int(t) for t in ids])
 ## bert4keras3.snippets
 这里主要是一些苏神自己定义使的工具方法   
 因此在下面我只介绍我自己常用的以及我添加的方法(有的话)  
- ### bert4keras3.sequence_padding函数
+ ### bert4keras3.sequence_padding函数[同时支持bert4keras]
 
  ```python
  def sequence_padding(
@@ -96,7 +163,8 @@ word = tokenizer.decode([int(t) for t in ids])
     value=0, 
     seq_dims=1, 
     mode='post',
-    show_tqdm=False)
+    show_tqdm=False#bert4keras不支持这个参数
+    )
  ```
  批量padding函数输入转化为在axis维形状相同的函数  
  inputs：输入，可以是list也可以是array  
@@ -106,7 +174,7 @@ word = tokenizer.decode([int(t) for t in ids])
  mode：输入'pre'是左padding，默认的'post'是右padding
  show_tqdm：要不要显示padding的进度条  
  
-  ### bert4keras3.DataGenerator函数
+  ### bert4keras3.DataGenerator函数[同时支持bert4keras]
  ```python
  DataGenerator( 
     data, 
@@ -161,7 +229,7 @@ model.fit(
 由于本质上是keras的层，所以下面我会用[keras文档](https://keras.io/api/layers/)的风格来介绍每一个layers  
 如果没有专门提及，那call方法只接受和输入形状一样的输入
 
-### bert4keras3.layers.LayerNorms.ScaleOffset
+### bert4keras3.layers.LayerNorms.ScaleOffset[同时支持bert4keras]
  ```python
  ScaleOffset( 
     scale=True,
@@ -179,7 +247,7 @@ offset: 是否使用偏移向量（beta）
 
 输入形状：(batch_size, …, input_dim)  
 输出形状：与输入一样，(batch_size, …, input_dim)
-#### bert4keras3.layers.LayerNorms.LayerNormalization
+#### bert4keras3.layers.LayerNorms.LayerNormalization[同时支持bert4keras]
  ```python
  LayerNormalization( 
     scale=True,
@@ -209,7 +277,7 @@ offset: 是否使用偏移向量（beta）
  与 RMSNormalization基本一致，区别是会先转成fp32再做ln运算再转回来
 
  ### bert4keras3.layers.FFN
-#### bert4keras3.layers.FFN.FeedForward
+#### bert4keras3.layers.FFN.FeedForward[同时支持bert4keras]
   ```python
 FeedForward( 
     units,
@@ -259,7 +327,7 @@ LLamaFeedForward(
   除此之外LLamaFeedForward会先转化为fp32再计算激励函数 
 
    ### bert4keras3.layers.Embeddings
-#### bert4keras3.layers.Embeddings.PositionEmbedding
+#### bert4keras3.layers.Embeddings.PositionEmbedding[同时支持bert4keras]
 ```python
 PositionEmbedding( 
     input_dim,
@@ -280,7 +348,7 @@ embeddings_initializer: 初始化器，用于位置嵌入矩阵的初始化。  
 输入形状： 如果custom_position_ids为False，输入形状为：(batch_size, seq_len, input_dim)； 如果custom_position_ids为True，输入形状为：[(batch_size, seq_len, input_dim), (batch_size, seq_len)]。
 
 输出形状： (batch_size, seq_len, output_dim)
-#### bert4keras3.layers.Embeddings.SinusoidalPositionEmbedding
+#### bert4keras3.layers.Embeddings.SinusoidalPositionEmbedding[同时支持bert4keras]
 ```python
 SinusoidalPositionEmbedding( 
     output_dim,
@@ -296,7 +364,7 @@ merge_mode: 字符串，表示位置嵌入与输入数据的合并方式。可�
 输入形状： 如果custom_position_ids为False，形状为：(batch_size, seq_len, input_dim)； 如果custom_position_ids为True，形状为：[(batch_size, seq_len, input_dim), (batch_size, seq_len)]。
 
 输出形状： (batch_size, seq_len, output_dim)
-#### bert4keras3.layers.Embeddings.RelativePositionEmbedding
+#### bert4keras3.layers.Embeddings.RelativePositionEmbedding[同时支持bert4keras]
 ```python
 RelativePositionEmbedding( 
     input_dim, 
@@ -312,7 +380,7 @@ embeddings_initializer: 初始化器，用于位置嵌入矩阵的初始化。
 输入形状： 两个张量, ```[(batch_size, seq_len1, dims1),(batch_size, seq_len2, dims2)] ```
 
 输出形状： 和绝对位置编码不同，这里只会直接返回位置编码。```形状是(seq_len1, seq_len2, output_dim)```
-#### bert4keras3.layers.Embeddings.RelativePositionEmbeddingT5
+#### bert4keras3.layers.Embeddings.RelativePositionEmbeddingT5[同时支持bert4keras]
 
 ```python
 RelativePositionEmbeddingT5( 
@@ -391,7 +459,7 @@ EfficientGlobalPointer
 使用方法与GlobalPointer完全一致
 
 ### bert4keras3.layers.Attentions  
-#### bert4keras3.layers.Attentions.MultiHeadAttention
+#### bert4keras3.layers.Attentions.MultiHeadAttention[同时支持bert4keras]
 ```python
 MultiHeadAttention( 
     heads,
@@ -404,12 +472,12 @@ MultiHeadAttention(
     attention_dropout=None,
     return_attention_scores=False,
     kernel_initializer='glorot_uniform',
-    o_bias=None,
-    query_head=None,
-    use_EinsumDense = False,
-    rope_mode='su',
-    max_wavelength=10_000.0,
-    scaling_factor=1.0,
+    o_bias=None,#不支持bert4keras
+    query_head=None,#不支持bert4keras
+    use_EinsumDense = False,#不支持bert4keras
+    rope_mode='su',#不支持bert4keras
+    max_wavelength=10_000.0,#不支持bert4keras
+    scaling_factor=1.0,#不支持bert4keras
  )
   ```
 heads：头的数量  
@@ -450,8 +518,9 @@ query的形状是(batch_size, seq_len1, dims1),key和value的形状(batch_size, 
 4.如果use_cache是True，且rope_mode不是'keras'。那要在前面的基础上给inputs加入kv-cache，shape应该是[bacth_size,2,seqlen,heads, head_size].没错你注意到了，如果key_size和head_size不一样的时候是不能使用kv-cache的。k和v的cache会在第二维stack起来  
 5.如果p_bias是'typical_relative'，'t5_relative'，输入应该是bert4keras3.layers.Embeddings.RelativePositionEmbedding和bert4keras3.layers.Embeddings.RelativePositionEmbeddingT5的输出。但是如果你用了kv-cache，那注意输入的第一维和query的长度是一致的  
 
+最后要注意的是如果你是看作bert4keras文档，那就去掉上面关于kv cache的部分即可    
 输出形状:[batch_size,seq_len,out_dim]
-#### bert4keras3.layers.Attentions.GatedAttentionUnit  
+#### bert4keras3.layers.Attentions.GatedAttentionUnit[同时支持bert4keras]  
 ```python
 GatedAttentionUnit(
     units,
@@ -459,11 +528,11 @@ GatedAttentionUnit(
     activation='swish',
     use_bias=True,
     normalization='squared_relu',
-    self_attention=True,
+    self_attention=True,#不支持bert4keras
     attention_scale=True,
     attention_dropout=None,
     kernel_initializer='glorot_uniform',
-    factorization=False
+    factorization=False#不支持bert4keras
 )
 ```
 [GAU](https://kexue.fm/archives/8934)  
@@ -501,18 +570,18 @@ os.environ['FLASH_ATTN']='1'
 加入这个环境变量会为启动模型启动Flash-attention训练模型。但是你必须要提前安装好相关的库，[torch版本](https://github.com/Dao-AILab/flash-attention)和[jax版本](https://github.com/nshepperd/flash_attn_jax),而tensorflow暂不支持  
 
 
-### 启动tf.keras
+### 启动tf.keras[同时支持bert4keras]
 ```python
 os.environ['TF_KERAS']='1'
 ```
 这里主要是针对老版本tf和bert4keras的兼容，设置这个可以让你使用tf.keras作为后端  
 
-### bert4keras3.backend.flatten
+### bert4keras3.backend.flatten[同时支持bert4keras]
 ```python
 flatten(tensor, start=None, end=None)
 ```
 将tensor从start到end的维度展平  
-### bert4keras3.backend.sequence_masking
+### bert4keras3.backend.sequence_masking[同时支持bert4keras]
 ```python
 sequence_masking(
     x, mask=None, value=0, axis=None, bias=None, return_mask=False
@@ -525,38 +594,38 @@ axis: 序列所在轴，默认为1；
 bias: 额外的偏置项，或者附加的mask；  
 return_mask: 是否同时返回对齐后的mask。  
 
-### bert4keras3.backend.divisible_temporal_padding  
+### bert4keras3.backend.divisible_temporal_padding[同时支持bert4keras]  
 ```python
 divisible_temporal_padding(x, n)
 ```
 将一维向量序列右padding到长度能被n整除
 
-### bert4keras3.backend.root_mean_square 
+### bert4keras3.backend.root_mean_square[同时支持bert4keras] 
 ```python
 root_mean_square(x, axis=None, keepdims=False)
 ```
 均方根，相当于模长的变体
-### bert4keras3.backend.sinusoidal_embeddings
+### bert4keras3.backend.sinusoidal_embeddings[同时支持bert4keras]
 ```python
 sinusoidal_embeddings(pos, dim, base=10000)
 ```
 计算pos位置的dim维sinusoidal编码
 
-### bert4keras3.backend.align
+### bert4keras3.backend.align[同时支持bert4keras]
 ```python
 align(tensor, axes, ndim=None)
 ```
 重新对齐tensor（批量版expand_dims）
 axes：原来的第i维对齐新tensor的第axes[i]维；
 ndim：新tensor的维度。
-### bert4keras3.backend.apply_rotary_position_embeddings
+### bert4keras3.backend.apply_rotary_position_embeddings[同时支持bert4keras]
 ```python
 apply_rotary_position_embeddings(sinusoidal, *tensors)
 ```
 应用RoPE到tensors中
 其中，sinusoidal.shape=[b, n, d]，tensors为tensor的列表，而
 tensor.shape=[b, n, ..., d]。
-### bert4keras3.backend.multilabel_categorical_crossentropy
+### bert4keras3.backend.multilabel_categorical_crossentropy[同时支持bert4keras]
 ```python
 multilabel_categorical_crossentropy(y_true, y_pred)
 ```
@@ -570,7 +639,7 @@ multilabel_categorical_crossentropy(y_true, y_pred)
 4. 详情请看：https://kexue.fm/archives/7359 和
     https://kexue.fm/archives/9064 。
 
-### bert4keras3.backend.multilabel_categorical_crossentropy
+### bert4keras3.backend.multilabel_categorical_crossentropy[同时支持bert4keras]
 ```python
 msparse_multilabel_categorical_crossentropy(y_true, y_pred, mask_zero=False)
 ```
@@ -585,19 +654,19 @@ msparse_multilabel_categorical_crossentropy(y_true, y_pred, mask_zero=False)
 
 
 ## bert4keras3.models
-### bert4keras3.models.extend_with_language_model
+### bert4keras3.models.extend_with_language_model[同时支持bert4keras]
 ```python
 def extend_with_language_model(BaseModel)
 ```
 添加下三角的Attention Mask（语言模型用）
 
-### bert4keras3.models.extend_with_unified_language_model
+### bert4keras3.models.extend_with_unified_language_model[同时支持bert4keras]
 ```python
 def extend_with_unified_language_model(BaseModel)
 ```
 添加UniLM的Attention Mask（Seq2Seq模型用）
 
-### bert4keras3.models.Transformer
+### bert4keras3.models.Transformer[同时支持bert4keras]
 ```python
 def build_transformer_model(
     config_path=None,
@@ -605,7 +674,7 @@ def build_transformer_model(
     model='bert',
     application='encoder',
     return_keras_model=True,
-    keras_weights_path=None,
+    keras_weights_path=None,#不支持bert4keras
     version=None
 )
 ```
@@ -616,7 +685,7 @@ application:主要是对bert类模型扩展用，候选为'lm'和'unilm'
 return_keras_model：返回的是keras的模型还是实例化的Transformer类  
 keras_weights_path：字符串，接受weights.h5存储格式的文件路径   
 version:主要是针对t5，因为t5有't5.1.1'和't5.1.0'两种情况  
-### bert4keras3.models.Transformer
+### bert4keras3.models.Transformer[同时支持bert4keras]
 ```python
 class Transformer(object):
     """模型基类
@@ -661,7 +730,7 @@ ignore_invalid_weights：为是否允许跳过名字不匹配的权重。默认�
 o_bias和query_head的作用参考MultiHeadAttention部分介绍  
 
 ```python
-#构建kv-cache生成模型方法
+#构建kv-cache生成模型方法，bert4keras没有这个方法，涉及kv cache的请无视
 def build_cache_model(
     input_lengths:list,
     end_token,
@@ -683,7 +752,7 @@ k:search_mode是greedy时无效，是topk时应该是一个大于1的整数，�
 progress_print：在每个推理的step内是否展示进度条，只对torch后端有效  
 index_bias：主要是针对t5这种模型，会在decoder把0作为第一个token，所以index_bias设置为1.常见的模型可以不考虑这个
 
-### bert4keras3.models.BERT
+### bert4keras3.models.BERT[同时支持bert4keras]
 ```python
 class BERT(Transformer):
     """构建BERT模型
@@ -702,27 +771,27 @@ class BERT(Transformer):
 ```
 需要注意的是，robert模型也是用这个模型，但with_nsp是没有用的  
 该模型支持kv cacahe生成，但需要在build_cache_model的时候设置application  
-### bert4keras3.models.NEZHA
+### bert4keras3.models.NEZHA[同时支持bert4keras]
 参数和BERT一致，但不支持kv-cache生成
-### bert4keras3.models.ELECTRA
+### bert4keras3.models.ELECTRA[同时支持bert4keras]
 参数和BERT一致，但不支持kv-cache生成
-### bert4keras3.models.ALBERT
+### bert4keras3.models.ALBERT[同时支持bert4keras]
 参数和BERT一致，但不支持kv-cache生成
-### bert4keras3.models.ALBERT_Unshared
+### bert4keras3.models.ALBERT_Unshared[同时支持bert4keras]
 解开ALBERT共享约束，当成BERT用  
 参数和BERT一致，但不支持kv-cache生成
-### bert4keras3.models.GPT
+### bert4keras3.models.GPT[同时支持bert4keras]
 [GPT模型](https://github.com/openai/finetune-transformer-lm)，但参数和bert一致
-### bert4keras3.models.GPT2
+### bert4keras3.models.GPT2[同时支持bert4keras]
 [GPT2模型](https://github.com/openai/gpt-2)，但参数和bert一致
-### bert4keras3.models.GPT2_ML
+### bert4keras3.models.GPT2_ML[同时支持bert4keras]
 [GPT2_ML模型](https://github.com/imcaspar/gpt2-ml)，但参数和bert一致  
 GPT2_ML虽然号称GPT2，但是它的结构其实更接近GPT，它自称GPT2的原因大概是因为它开源的版本参数量达到了GPT2的15亿参数
-### bert4keras3.models.GAU_alpha
+### bert4keras3.models.GAU_alpha[同时支持bert4keras]
 参数和bert一致，但是max_position参数无效
-### bert4keras3.models.RoFormer
+### bert4keras3.models.RoFormer[同时支持bert4keras]
 参数和bert一致，但是max_position参数无效，支持kv-cache生成
-### bert4keras3.models.RoFormerV2
+### bert4keras3.models.RoFormerV2[同时支持bert4keras]
 参数和bert一致，但是max_position参数无效，支持kv-cache生成  
 在roformer基础上去掉bias，简化Norm，优化初始化等。
 ### bert4keras3.models.Gemma  
@@ -765,9 +834,9 @@ llama和gemma整体上差不多，但是有些默认参数要做调整
 ### Qwen 模型
 [Qwen](https://github.com/search?q=qwen&type=repositories)模型实质上就是llama模型，只不过需要设置```use_bias=True;o_bias=False```  
 除此之外需要注意的是QWen 0.5B的share_emebding是False  
-### bert4keras3.models.T5_Encoder
+### bert4keras3.models.T5_Encoder[同时支持bert4keras]
 和Bert的参数一致
-### bert4keras3.models.T5_Decoder
+### bert4keras3.models.T5_Decoder[同时支持bert4keras]
 ```python
 class T5_Decoder(LM_Mask, T5_Base):
     """Google的T5模型（Decoder）
@@ -783,7 +852,7 @@ cross_position_bias:在cross_attention处是否用t5位置编码
 logit_scale：最后输出是否scale一下，t5原本这里是True，但是chatyuan是False  
 decoder_sequence_length：decoer输入的最大长度  
 除此之外参数和bert保持一致，且支持kv-cache生成  
-### bert4keras3.models.T5
+### bert4keras3.models.T5[同时支持bert4keras]
 把T5_Encoder和T5_Decoder整合成同一个模型里。这里另外支持一个和T5_Decoder独立的build_cache_model方法。区别是T5_Decoder的build_cache_model方法构建的模型需要你输入encoder输出的向量。  
 而T5把encoder也整合进了cache模型，你可以把encoder的token也作为输入 
 最后就是如果你在 build_transformer_model中设置return_keras_model=False，那你可以分别获取他的encoder和decoder模型。示例代码如下。
