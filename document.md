@@ -1,5 +1,5 @@
 # 目录
-[TOC]
+@[TOC]
 # api说明
 由于希望能同时把本文档作为bert4keras的文档使用，对于同时支持bert4keras和bert4keras3的部分我会用*表示
 ## bert4keras3.tokenizers
