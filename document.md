@@ -1,6 +1,69 @@
-
+# 目录
+1. [API说明](#api说明)
+   - `bert4keras3.tokenizers`
+     - [Tokenizer类](#tokenizer类)
+     - [Tokenizer.encode方法](#tokenizerencode方法)
+     - [Tokenizer.decode方法](#tokenizerdecode方法)
+   - `bert4keras3.ops`
+   - `bert4keras3.snippets`
+     - [sequence_padding函数](#sequence_padding函数)
+     - [DataGenerator函数](#datagenerator函数)
+   - `bert4keras3.layers`
+     - [LayerNorms.ScaleOffset](#layernormsscaleoffset)
+     - [LayerNorms.LayerNormalization](#layernormalization)
+     - [LayerNorms.RMSNormalization](#rmsnormalization)
+     - [LayerNorms.LlamaLayerNorm](#llamalayernorm)
+     - [FFN.FeedForward](#ffnfeedforward)
+     - [FFN.GemmaFeedForward](#ffngemmafeedforward)
+     - [FFN.LLamaFeedForward](#llamafeedforward)
+     - [Embeddings.PositionEmbedding](#positionembedding)
+     - [Embeddings.SinusoidalPositionEmbedding](#sinusoidalpositionembedding)
+     - [Embeddings.RelativePositionEmbedding](#relativepositionembedding)
+     - [Embeddings.RelativePositionEmbeddingT5](#relativepositionembeddingt5)
+     - [Embeddings.RotaryEmbedding](#rotaryembedding)
+     - [Embeddings.Embedding](#embedding)
+     - [GP.GlobalPointer](#globalpointer)
+     - [GP.EfficientGlobalPointer](#efficientglobalpointer)
+     - [Attentions.MultiHeadAttention](#multiheadattention)
+     - [Attentions.GatedAttentionUnit](#gatedattentionunit)
+   - `bert4keras3.backend`
+     - [启动Lora](#启动lora)
+     - [启动Flash-attention](#启动flash-attention)
+     - [启动tf.keras](#启动tfkeras)
+     - [flatten函数](#flatten函数)
+     - [sequence_masking函数](#sequence_masking函数)
+     - [divisible_temporal_padding函数](#divisible_temporal_padding函数)
+     - [root_mean_square函数](#root_mean_square函数)
+     - [sinusoidal_embeddings函数](#sinusoidal_embeddings函数)
+     - [align函数](#align函数)
+     - [apply_rotary_position_embeddings函数](#apply_rotary_position_embeddings函数)
+     - [multilabel_categorical_crossentropy函数](#multilabel_categorical_crossentropy函数)
+     - [msparse_multilabel_categorical_crossentropy函数](#msparse_multilabel_categorical_crossentropy函数)
+   - `bert4keras3.models`
+     - [extend_with_language_model函数](#extend_with_language_model函数)
+     - [extend_with_unified_language_model函数](#extend_with_unified_language_model函数)
+     - [Transformer函数](#transformer函数)
+     - [Transformer类](#transformer类)
+     - [build_cache_model函数](#build_cache_model函数)
+     - [BERT类](#bert类)
+     - [NEZHA类](#nezha类)
+     - [ELECTRA类](#electra类)
+     - [ALBERT类](#albert类)
+     - [ALBERT_Unshared类](#albert_unshared类)
+     - [GPT类](#gpt类)
+     - [GPT2类](#gpt2类)
+     - [GPT2_ML类](#gpt2_ml类)
+     - [GAU_alpha类](#gau_alpha类)
+     - [RoFormer类](#roformer类)
+     - [RoFormerV2类](#roformerv2类)
+     - [Gemma类](#gemma类)
+     - [Llama类](#llama类)
+     - [Qwen模型](#qwen模型)
+     - [T5_Encoder类](#t5_encoder类)
+     - [T5_Decoder类](#t5_decoder类)
+     - [T5类](#t5类)
 # api说明
-
+由于希望能同时把本文档作为bert4keras的文档使用，对于同时支持bert4keras和bert4keras3的部分我会用*表示
 ## bert4keras3.tokenizers
 
 这一部分主要沿用bert4keras时苏神的实现，对于新的大模型建议使用transformers的AutoTokenizer
