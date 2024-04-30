@@ -11,6 +11,8 @@ bert4keras实现的优化器目前暂时不做兼容，除开优化器部分外�
 ## 安装
 pip install bert4keras3
 
+##api文档
+请参考[api说明](https://github.com/pass-lin/bert4keras3/blob/main/document.md)  
 
 ## 后端版本
 
