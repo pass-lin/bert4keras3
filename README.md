@@ -19,21 +19,31 @@ pip install bert4keras3
 ### 后端安装
 如果你用不是tensorflow后端，我建议安装一个tensorflow-cpu==2.10  
 ```
-pip install tensorflow-cpu==2.10
-pip install --upgrade keras
+pip3 install tensorflow-cpu==2.10
+pip3 install --upgrade keras
 ```
 如果你用torch后端，直接安装最新的torch就行了。但是我个人建议torch后端只用来调试  
 ```
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip3 install keras
 ```
 如果你需要使用tensorflow后端，那我建议你安装tensorflow的2.15  
 ```
-pip install tensorflow[and-cuda]==2.15
-pip install --upgrade keras
+pip3 install tensorflow[and-cuda]==2.15
+pip3 install --upgrade keras
 ```
 当然你想安装最新的也可以，但是问题就是加载苏神的权重会有点问题。谷歌的尿性你们懂的  
 还有就是cuda版本要大于12.2，你的服务器不一定能同步。可以看[tensorflow的cuda、cudnn版本对应](https://tensorflow.google.cn/install/source#tested_build_configurations)  
 如果你想使用jax后端，jax安装建议看[keras官方文档的jax-cuda要求](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt  )    
+比如在keras3.3.3的情况下，官方推荐的版本是jax 0.4.23，那安装可以这么写  
+```
+#cuda12
+pip3 install jax[cuda12_pip]==0.4.23 --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+#cuda11
+pip3 install jax[cuda11_pip]==0.4.23 --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+pip3 install --upgrade keras
+```
 jax和tensorflow后端只能在linux使用cuda  
 
 ## 功能
