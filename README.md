@@ -8,19 +8,28 @@ bert4keras是我最喜欢的库之一，但在现在来说其后端tf1.15显得�
 兼容keras3及其对应后端 目前已经成功实现了bert4keras所支持的所有预训练模型的兼容  
 bert4keras实现的优化器目前暂时不做兼容，除开优化器部分外，如何使用请参考bert4keras的example，本仓库的example只提供了如何把模型load出来的测试  
 
-## 安装
-pip install bert4keras3
 
-##api文档
+## api文档
 请参考[api说明](https://github.com/pass-lin/bert4keras3/blob/main/document.md)  
 
-## 后端版本
 
-keras3的相关后端，请参考keras官方的版本要求  
-即使你不使用tf作为后端，也要安装一个tf的cpu版本    
-https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt  
-https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt    
-https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt  
+## 安装
+pip install bert4keras3
+因为我是个人开发，连草台班子都不是，经常会发布修改bug的版本，所以建议安装最新版本  
+### 后端版本
+如果你用不是tensorflow后端，我建议安装一个tensorflow-cpu==2.10  
+如果你用torch后端，直接安装最新的torch就行了。但是我个人建议torch后端只用来调试  
+```
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+如果你需要使用tensorflow后端，那我建议你安装tensorflow的2.15  
+```
+pip install tensorflow[and-cuda]==2.15
+```
+当然你想安装最新的也可以，但是问题就是加载苏神的权重会有点问题。谷歌的尿性你们懂的  
+还有就是cuda版本要大于12.2，你的服务器不一定能同步。可以看[tensorflow的cuda、cudnn版本对应](https://tensorflow.google.cn/install/source#tested_build_configurations)  
+如果你想使用jax后端，jax安装建议看[keras官方文档的jax-cuda要求](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt  )    
+jax和tensorflow后端只能在linux使用cuda  
 
 ## 功能
 初始版本与bert4keras基本相同，可以参考https://github.com/bojone/bert4keras  
