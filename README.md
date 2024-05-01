@@ -14,8 +14,11 @@ bert4keras实现的优化器目前暂时不做兼容，除开优化器部分外�
 
 
 ## 安装
-pip install bert4keras3
-因为我是个人开发，连草台班子都不是，经常会发布修改bug的版本，所以建议安装最新版本  
+
+因为我是个人开发，连草台班子都不是，经常会发布修改bug的版本，所以建议安装最新版本
+```
+pip install --upgrade bert4keras3
+```
 ### 后端安装
 如果你用不是tensorflow后端，我建议安装一个tensorflow-cpu==2.10  
 ```
