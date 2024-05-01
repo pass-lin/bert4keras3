@@ -18,6 +18,10 @@ pip install bert4keras3
 因为我是个人开发，连草台班子都不是，经常会发布修改bug的版本，所以建议安装最新版本  
 ### 后端安装
 如果你用不是tensorflow后端，我建议安装一个tensorflow-cpu==2.10  
+```
+pip install tensorflow-cpu==2.10
+pip install --upgrade keras
+```
 如果你用torch后端，直接安装最新的torch就行了。但是我个人建议torch后端只用来调试  
 ```
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
@@ -25,6 +29,7 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 如果你需要使用tensorflow后端，那我建议你安装tensorflow的2.15  
 ```
 pip install tensorflow[and-cuda]==2.15
+pip install --upgrade keras
 ```
 当然你想安装最新的也可以，但是问题就是加载苏神的权重会有点问题。谷歌的尿性你们懂的  
 还有就是cuda版本要大于12.2，你的服务器不一定能同步。可以看[tensorflow的cuda、cudnn版本对应](https://tensorflow.google.cn/install/source#tested_build_configurations)  
