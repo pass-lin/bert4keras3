@@ -144,6 +144,7 @@ jax和tensorflow后端只能在linux使用cuda
 - 注4：SpTokenizer指的是bert4keras3.tokenizers.SpTokenizer,AutoTokenizer指的是transformers的分词器。用法不同需要注意  
 - 注5：因为不能转换全部的权重，所以我提供了转化权重的脚本，有需要自己去转。
 - 注6：bert4keras3的新增加的模型权重均支持kv-cache生成
+- 注7: it模型指的是instruct模型，也就是我们俗话说的chat模型
 # 版本更新
 ## 2023.12.30发布bert4keras3的第一个版本1.0 
 对bert4keras除优化器部分外的升级，实现对tensorflow，jax，torch的多后端兼容
