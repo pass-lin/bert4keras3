@@ -59,7 +59,7 @@ jax和tensorflow后端只能在linux使用cuda
 
 ## 如何实现多版本兼容
 
-如果你只是想兼容torch、tf和jax，那么我建议你使用纯keras的api实现o，参考keras.i。对于精细的算子可以使用keras.ops,如果keras实在没有算子，那你只能提供一个api的三后端实现了  
+如果你只是想兼容torch、tf和jax，那么我建议你使用纯keras的api实现，参考keras.io。对于精细的算子可以使用keras.ops,如果keras实在没有算子，那你只能提供一个api的三后端实现了  
 如果你想兼容keras2和tf.api，因为在keras3中增加了ops系列并且删除了绝大部分keras.backend中的算子操作。因此如果你需要兼容tf2是有一定困难的。  
 为了解决这个问题，bert4keras3.ops手动对齐了keras3中的ops，api。所以如果你想要兼容keras2和tf.keras，那么在编写代码时请from bert4keras3 import ops，在keras2中使用的是我们对齐的api，而在keras3中使用的是keras.ops。通过这种方法，你可以很容易地实现更好的兼容性  
 
