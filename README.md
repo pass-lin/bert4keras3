@@ -125,6 +125,8 @@ jax和tensorflow后端只能在linux使用cuda
 |[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [百度网盘](https://pan.baidu.com/s/192ftWGc64CyNa5UHZkXwwA?pwd=q2ft) |  BF16|AutoTokenizer|
 ||Yi-6B-it | [百度网盘](https://pan.baidu.com/s/1klsfNCJzA3wXAFTLsFejZQ?pwd=mp4f) |  BF16|AutoTokenizer|
 ||Yi-9B | [百度网盘](https://pan.baidu.com/s/1H6n7a49EgdQ2QmG4B8Yi6A?pwd=p4kg) |  BF16|AutoTokenizer|
+||Yi-1.5-6B | [百度网盘](https://pan.baidu.com/s/1tYFQMXfgeEnox4f66lm6sw?pwd=7rxa) |  BF16|AutoTokenizer|
+||Yi-1.5-9B | [百度网盘]() |  BF16|AutoTokenizer|
 ||Llama3-8B | [百度网盘](https://pan.baidu.com/s/1HW8WUQsTK9gORTTFQOo93g?pwd=sk8n) |  BF16|AutoTokenizer|
 ||Llama3-8B-it | [百度网盘](https://pan.baidu.com/s/1so6-DYAuoMIHTCNVGGhfYw?pwd=rd7a) |  BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [百度网盘](https://pan.baidu.com/s/1sAc7ML0YzG8j-hogtl3h2A?pwd=2rju)|  BF16|AutoTokenizer|
@@ -135,6 +137,8 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen-4B-it| [百度网盘](https://pan.baidu.com/s/1_aIttv66J6RNCoYWRcd2lQ?pwd=6yuw) |  BF16|AutoTokenizer|
 || Qwen-7B| [百度网盘](https://pan.baidu.com/s/1c0ifemUKUxnIJA_ia4kcnQ?pwd=7ptp) |  BF16|AutoTokenizer|
 || Qwen-7B-it| [百度网盘](https://pan.baidu.com/s/1QK0WpZYVM3TxBHmd6iKgvg?pwd=hh2f) |  BF16|AutoTokenizer|
+|| Qwen-14B| [百度网盘](https://pan.baidu.com/s/18PbVxmX5ShawUGXeOHwfig?pwd=9pcx) |  BF16|AutoTokenizer|
+|| Qwen-14B-it| [百度网盘]() |  BF16|AutoTokenizer|
 <!-- || | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
