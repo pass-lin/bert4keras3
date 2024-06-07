@@ -139,13 +139,13 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen-7B-it| [百度网盘](https://pan.baidu.com/s/1QK0WpZYVM3TxBHmd6iKgvg?pwd=hh2f) |  BF16|AutoTokenizer|
 || Qwen-14B| [百度网盘](https://pan.baidu.com/s/18PbVxmX5ShawUGXeOHwfig?pwd=9pcx) |  BF16|AutoTokenizer|
 || Qwen-14B-it| [百度网盘](https://pan.baidu.com/s/1B4926w8BA6YcXypOs6uWrA?pwd=y6pr) |  BF16|AutoTokenizer|
-|| Qwen2-0.5B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| Qwen2-0.5B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| Qwen2-1.5B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| Qwen2-1.5B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| Qwen2-7B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-|| Qwen2-7B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
-<!-- || | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer| -->
+|| Qwen2-0.5B| [百度网盘]()|  √|BF16|AutoTokenizer|
+|| Qwen2-0.5B-it| [百度网盘]() |  √|BF16|AutoTokenizer|
+|| Qwen2-1.5B| [百度网盘]() |  √|BF16|AutoTokenizer|
+|| Qwen2-1.5B-it| [百度网盘]() |  √|BF16|AutoTokenizer|
+|| Qwen2-7B| [百度网盘]() |  √|BF16|AutoTokenizer|
+|| Qwen2-7B-it| [百度网盘]() |  √|BF16|AutoTokenizer|
+<!-- || | [百度网盘]() |  √|BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
