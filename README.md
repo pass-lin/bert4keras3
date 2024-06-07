@@ -139,6 +139,12 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen-7B-it| [百度网盘](https://pan.baidu.com/s/1QK0WpZYVM3TxBHmd6iKgvg?pwd=hh2f) |  BF16|AutoTokenizer|
 || Qwen-14B| [百度网盘](https://pan.baidu.com/s/18PbVxmX5ShawUGXeOHwfig?pwd=9pcx) |  BF16|AutoTokenizer|
 || Qwen-14B-it| [百度网盘](https://pan.baidu.com/s/1B4926w8BA6YcXypOs6uWrA?pwd=y6pr) |  BF16|AutoTokenizer|
+|| Qwen2-0.5B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen2-0.5B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen2-1.5B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen2-1.5B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen2-7B| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
+|| Qwen2-7B-it| [百度网盘]() 提取码：|  √|BF16|AutoTokenizer|
 <!-- || | [百度网盘]() 提取码：|  √|BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
