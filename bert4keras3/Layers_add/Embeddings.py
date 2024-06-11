@@ -157,7 +157,7 @@ class SinusoidalPositionEmbedding(Layer):
             position_ids = ops.arange(0, seq_len, dtype=K.floatx())[None]
 
         embeddings = sinusoidal_embeddings(position_ids, self.output_dim)
-        
+        embeddings = ops.cast(embeddings,self.compute_dtype)
         if self.merge_mode == 'add':
             return inputs + embeddings
         elif self.merge_mode == 'mul':

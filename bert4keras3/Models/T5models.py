@@ -135,13 +135,13 @@ class T5_Encoder(T5_Base):
         x_in = self.apply(
             layer=Input,
             shape=(self.sequence_length,),
-            name='Encoder-Input-Token'
+            name='Encoder-Input-Token',dtype='int32'
         )
         if self.segment_vocab_size > 0:
             s_in = self.apply(
                 layer=Input,
                 shape=(self.sequence_length,),
-                name='Segment-Input-Token'
+                name='Segment-Input-Token',dtype='int32'
             )
             return [x_in,s_in]
         return x_in
@@ -346,7 +346,7 @@ class T5_Decoder(LM_Mask, T5_Base):
         x_in = self.apply(
             layer=Input,
             shape=(self.decoder_sequence_length,),
-            name='Decoder-Input-Token'
+            name='Decoder-Input-Token',dtype='int32'
         )
         return [c_in, x_in]
 
@@ -635,7 +635,7 @@ class T5_Decoder(LM_Mask, T5_Base):
         )
         x_in = self.apply(
             layer=Input,
-            shape=[lengths[1]],
+            shape=[lengths[1]],dtype='int32',
             name='Decoder-Input-Token-cache-'+str(lengths[1])
         )
         return [c_in, x_in] 

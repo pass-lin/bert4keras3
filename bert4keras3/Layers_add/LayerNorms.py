@@ -181,7 +181,8 @@ class RMSNormalization(keras.layers.Layer):
         normed_inputs = x * ops.reciprocal(ops.sqrt(var + self.epsilon))
         normed_inputs = normed_inputs * (1 + scale)
         return ops.cast(normed_inputs, self.compute_dtype)
-    
+    def compute_mask(self, inputs, mask=None):
+        return mask
 class LlamaLayerNorm(keras.layers.Layer):
     """A normalization layer for Llama that implements RMS normalization."""
 
@@ -211,3 +212,5 @@ class LlamaLayerNorm(keras.layers.Layer):
         config = super().get_config()
         config.update({"epsilon": self.epsilon})
         return config
+    def compute_mask(self, inputs, mask=None):
+        return mask

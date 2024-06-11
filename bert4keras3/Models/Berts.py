@@ -40,7 +40,7 @@ class BERT(Transformer):
         （但允许自行传入位置id，以实现一些特殊需求）
         """
         x_in = self.apply(
-            layer=Input, shape=(self.sequence_length,), name='Input-Token'
+            layer=Input, shape=(self.sequence_length,), name='Input-Token',dtype='int32'
         )
         inputs = [x_in]
 
@@ -48,7 +48,8 @@ class BERT(Transformer):
             s_in = self.apply(
                 layer=Input,
                 shape=(self.sequence_length,),
-                name='Input-Segment'
+                name='Input-Segment',dtype='int32'
+                
             )
             inputs.append(s_in)
 
@@ -56,7 +57,7 @@ class BERT(Transformer):
             p_in = self.apply(
                 layer=Input,
                 shape=(self.sequence_length,),
-                name='Input-Position'
+                name='Input-Position',dtype='int32'
             )
             inputs.append(p_in)
 
@@ -106,14 +107,14 @@ class BERT(Transformer):
         return [x,caches]
     def get_cache_inputs(self,lengths:list):
         x_in = self.apply(
-            layer=Input, shape=[lengths[0],], name='Input-Token-cache-'+str(lengths[0])
+            layer=Input, shape=[lengths[0],], name='Input-Token-cache-'+str(lengths[0]),dtype='int32',
         )
         inputs = [x_in]
 
         if self.segment_vocab_size > 0:
             s_in = self.apply(
                 layer=Input,
-                shape=[lengths[1]],
+                shape=[lengths[1]],dtype='int32',
                 name='Input-Segment-cache-'+str(lengths[1])
             )
             inputs.append(s_in)

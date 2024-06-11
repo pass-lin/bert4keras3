@@ -124,9 +124,7 @@ class LLamaFeedForward(FeedForward):
 
         activation = activations.get(self.activation[0])
         gate_output = self._feedforward_gate_dense(x)
-        #gate_output = ops.cast(gate_output, "float32")
         gate_output = activation(gate_output)
-        #gate_output = ops.cast(gate_output, x.dtype)
         x = self._feedforward_intermediate_dense(x)
         x = self._feedforward_output_dense(ops.multiply(x, gate_output))
         return x#

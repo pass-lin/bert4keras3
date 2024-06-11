@@ -141,15 +141,24 @@ def build_transformer_model(
             
             def enable_lora(t):
                 if isinstance(t,keras.layers.Embedding) :
-                    t.enable_lora(kwargs['attention_head_size']*2)
+                    t.enable_lora(configs['attention_head_size']*2)
                 elif isinstance(t,keras.layers.Dense):
-                    t.enable_lora(kwargs['attention_head_size'])
+                    t.enable_lora(configs['attention_head_size'])
+                else:
+                    return True
+                return False
+                    
             for layer in transformer.model.layers:
-                layer.trainable=False
-                enable_lora(layer)
+                if 'norm' in layer.name.lower():
+                    continue
+                flag = enable_lora(layer)
+                if flag:
+                    layer.trainable=False
                 for kid in dir (layer):
                     t = getattr(layer,kid)
                     enable_lora(t)
+                    if flag:
+                        layer.trainable=False
     if checkpoint_path is not None:
         transformer.load_weights_from_checkpoint(checkpoint_path)
 

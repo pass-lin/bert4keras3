@@ -136,6 +136,7 @@ class MultiHeadAttention(Layer):
         v_mask: 对输入的value序列的mask。
                 主要是防止attention读取到padding信息。
         """
+       
         q, k, v = inputs[:3]
         q_mask, v_mask = None, None
         use_cache = kwargs.get('use_cache')
@@ -249,7 +250,7 @@ class MultiHeadAttention(Layer):
             if self.attention_scale:
                 softmax_scale = 1 / self.key_size**0.5
             o = flash_mha(qw,kw,vw,softmax_scale=softmax_scale, is_causal=is_causal)
-            return o,[],[]
+            return o,[],cache
         # Attention
         q_shape = ops.shape(qw)
         b,s = q_shape[:-2]

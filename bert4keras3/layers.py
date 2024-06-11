@@ -20,95 +20,7 @@ from bert4keras3.Layers_add.Attentions import *
 from bert4keras3.Layers_add.FFN import *
 
 
-if (not is_tf_keras) and keras.__version__ < '2.3':
-    import tensorflow as tf
-    class Layer(keras.layers.Layer):
-        """重新定义Layer，赋予“层中层”功能
-        （仅keras 2.3以下版本需要）
-        """
-        def __init__(self, **kwargs):
-            super(Layer, self).__init__(**kwargs)
-            self.supports_masking = True  # 本项目的自定义层均可mask
 
-        def __setattr__(self, name, value):
-            if isinstance(value, keras.layers.Layer):
-                if not hasattr(self, '_layers'):
-                    self._layers = []
-                if value not in self._layers:
-                    self._layers.append(value)
-            super(Layer, self).__setattr__(name, value)
-
-        @property
-        def trainable_weights(self):
-            trainable = getattr(self, 'trainable', True)
-            if trainable:
-                trainable_weights = super(Layer, self).trainable_weights[:]
-                for l in getattr(self, '_layers', []):
-                    trainable_weights += l.trainable_weights
-                return trainable_weights
-            else:
-                return []
-
-        @property
-        def non_trainable_weights(self):
-            trainable = getattr(self, 'trainable', True)
-            non_trainable_weights = super(Layer, self).non_trainable_weights[:]
-            for l in getattr(self, '_layers', []):
-                if trainable:
-                    non_trainable_weights += l.non_trainable_weights
-                else:
-                    non_trainable_weights += l.weights
-            return non_trainable_weights
-
-    if keras.__version__ < '2.2.5':
-
-        import inspect
-
-        class Model(keras.models.Model):
-            """重新定义Model，整合fit和fit_generator
-            """
-            def fit(self, x=None, *args, **kwargs):
-                if inspect.isgenerator(x):
-                    return self.fit_generator(x, *args, **kwargs)
-                else:
-                    return super(Model, self).fit(x, *args, **kwargs)
-
-        keras.models.Model = Model
-
-else:
-
-    class Layer(keras.layers.Layer):
-        def __init__(self, **kwargs):
-            super(Layer, self).__init__(**kwargs)
-            self.supports_masking = True  # 本项目的自定义层均可mask
-
-
-if ((not is_tf_keras) or tf.__version__ < '1.15') and keras.__version__ < '3':
-
-    if not is_tf_keras:
-        NodeBase = keras.engine.base_layer.Node
-    else:
-        from tensorflow.python.keras.engine import base_layer
-        NodeBase = base_layer.Node
-
-    class Node(NodeBase):
-        """修改Node来修复keras下孪生网络的bug
-        注意：这是keras的bug，并不是bert4keras的bug，但keras已经不更新了，
-             所以只好在这里进行修改。tf 1.15+自带的keras已经修改了这个
-             bug。
-        """
-        @property
-        def arguments(self):
-            return self._arguments.copy()
-
-        @arguments.setter
-        def arguments(self, value):
-            self._arguments = value or {}
-
-    if not is_tf_keras:
-        keras.engine.base_layer.Node = Node
-    else:
-        base_layer.Node = Node
 
 
 class GlobalAveragePooling1D(keras.layers.GlobalAveragePooling1D):
@@ -117,7 +29,7 @@ class GlobalAveragePooling1D(keras.layers.GlobalAveragePooling1D):
     def call(self, inputs, mask=None):
         axis = 1 if self.data_format == 'channels_last' else 2
         if mask is not None:
-            mask = ops.cast(mask, keras.mixed_precision.dtype_policy().name)
+            mask = ops.cast(mask, self.compute_dtype)
             mask = mask[..., None] if axis == 1 else mask[:, None]
             return ops.sum(inputs * mask, axis=axis) / ops.sum(mask, axis=axis)
         else:

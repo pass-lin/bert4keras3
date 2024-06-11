@@ -186,6 +186,7 @@ class Transformer(object):
                     o, a = self.layers[name](inputs, **arguments)
                     self.attention_scores = a
                     return o
+            
             return self.layers[name](inputs, **arguments)
 
     def get_inputs(self):
@@ -458,7 +459,7 @@ class LM_Mask(object):
                         cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.attention_key_size] 
                     else:
                         cache_shape=[ops.shape(t)[0],2,ops.shape(t)[1],self.num_attention_heads,self.attention_key_size]
-                    caches.append(ops.zeros(cache_shape,dtype=keras.mixed_precision.dtype_policy().name))
+                    caches.append(ops.zeros(cache_shape,dtype=self.compute_dtype))
                 return caches
             def compute_output_shape(self, input_shape):
                 shapes=[]
@@ -486,7 +487,7 @@ class LM_Mask(object):
     def cache_call(self,inputs:list,input_lengths:list,end_token,
                    search_mode='greedy',k=1,progress_print=True,index_bias=0):
         old_flag = self.custom_position_ids
-        
+        #print(keras.mixed_precision.dtype_policy())
         if self.is_seq2seq:
             caches = self.initial_cache([inputs[1],inputs[0]])
             key = 1
@@ -579,6 +580,7 @@ class LM_Mask(object):
                 
                 caches[i*j:i*j+j]=cache
             
+
             o = self.apply_final_layers(z)
             index += 1
 
@@ -591,12 +593,13 @@ class LM_Mask(object):
         class WhileLayer(keras.Layer):
             def call(self, x):
                 inputs, caches, index =  x[:]
-
                 flags = ops.ones([ops.shape(caches[0])[0],1],dtype='bool')
+                
                 if backlib=='torch':
                     while cond(inputs, caches, index , flags):
                         inputs, caches, index , flags = body(inputs, caches, index , flags)
                     return (inputs, caches, index)
+                
                 outs=ops.while_loop(
                     cond,
                     body,
@@ -612,8 +615,8 @@ class LM_Mask(object):
         out=self.apply(
             inputs=(inputs, caches, index),
             layer=WhileLayer,
-            dtype='float32',
-            name='WhileLayer'
+            name='WhileLayer',
+            
         )
 
         self.custom_position_ids = old_flag

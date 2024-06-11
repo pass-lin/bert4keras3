@@ -256,10 +256,7 @@ class Gemma(LM_Mask,RoFormer):
             inputs=self.simplify([x, z]),
             name='%s-Norm' % feed_forward_name
         )
-        x = self.apply(
-            inputs=x,
-            name=feed_forward_name
-        )
+        x = self.apply_ffn(x,feed_forward_name)
         x = self.apply(
             inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
         )
