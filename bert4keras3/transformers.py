@@ -6,7 +6,7 @@ Created on Mon Apr 22 14:20:44 2024
 """
 
 import numpy as np
-from bert4keras3.backend import tf,keras,backlib,lora_model
+from bert4keras3.backend import load_tf,keras,backlib,lora_model
 from bert4keras3.layers import *
 from bert4keras3.snippets import insert_arguments
 from bert4keras3.snippets import delete_arguments
@@ -285,6 +285,7 @@ class Transformer(object):
         if isinstance(checkpoint, dict):
             return checkpoint[name]
         else:
+            import tensorflow as tf
             return tf.train.load_variable(checkpoint, name)
 
     def create_variable(self, name, value, dtype=None):

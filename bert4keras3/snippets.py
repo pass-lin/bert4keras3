@@ -288,10 +288,11 @@ def parallel_apply(
         for i, d in generator:
             callback(d)
 
-from tqdm import tqdm
+
 def sequence_padding(inputs, length=None, value=0, seq_dims=1, mode='post',show_tqdm=False):
     """Numpy函数，将序列padding到同一长度
     """
+    from tqdm import tqdm
     if length is None:
         length = np.max([np.shape(x)[:seq_dims] for x in inputs], axis=0)
     elif not hasattr(length, '__getitem__'):
@@ -444,6 +445,7 @@ class DataGenerator(object):
         """转为tf.data.Dataset格式
         如果传入names的话，自动把数据包装成dict形式。
         """
+        import tensorflow as tf
         if names is None:
 
             generator = self.forfit

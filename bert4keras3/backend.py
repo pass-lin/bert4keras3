@@ -5,10 +5,12 @@
 import os, sys
 from distutils.util import strtobool
 import numpy as np
-import tensorflow as tf
 from functools import wraps
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
 lora_model = strtobool(os.environ.get('ENABLE_LORA', '0'))
+load_tf = strtobool(os.environ.get('LOAD_TF', '1'))
+if load_tf:
+    import tensorflow as tf
 #jax使用flash参考https://github.com/nshepperd/flash_attn_jax/releases这里安装flash
 enable_flashatt = strtobool(os.environ.get('FLASH_ATTN', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
