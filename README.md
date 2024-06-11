@@ -21,6 +21,7 @@ pip install --upgrade bert4keras3
 ```
 ### 后端安装
 如果你用不是tensorflow后端，我建议安装一个tensorflow-cpu==2.10  
+当然如果你不需要加载旧版bert4keras对应的权重的话（对应下面模型权重的第一个表），那其实tf的cpu也不用安装。  
 ```
 pip3 install tensorflow-cpu==2.10
 pip3 install --upgrade keras
