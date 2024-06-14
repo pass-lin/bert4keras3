@@ -132,7 +132,7 @@ jax和tensorflow后端只能在linux使用cuda
 ||Llama3-8B-it | [ModelScope]() | BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-0.5B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen-0.5B-it| [ModelScope]() | BF16|AutoTokenizer|
-|| Qwen-1.8B| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-1.8B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-1.8B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen-1.8B-it| [ModelScope]() | BF16|AutoTokenizer|
 || Qwen-4B| [ModelScope]() | BF16|AutoTokenizer|
 || Qwen-4B-it| [ModelScope]() | BF16|AutoTokenizer|
