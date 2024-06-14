@@ -126,7 +126,7 @@ jax和tensorflow后端只能在linux使用cuda
 |[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope]() | BF16|AutoTokenizer|
 ||Yi-6B-it | [ModelScope]() | BF16|AutoTokenizer|
 ||Yi-9B | [ModelScope]() | BF16|AutoTokenizer|
-||Yi-1.5-6B | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-1.5-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-9B | [ModelScope]() | BF16|AutoTokenizer|
 ||Llama3-8B | [ModelScope]() | BF16|AutoTokenizer|
 ||Llama3-8B-it | [ModelScope]() | BF16|AutoTokenizer|
