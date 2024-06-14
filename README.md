@@ -105,47 +105,47 @@ jax和tensorflow后端只能在linux使用cuda
 ### 通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载
   | 模型分类| 模型名称 |  权重链接|数据类型|分词器|
   | -------------- | -------------------------- | ------------------------------------------------------------ |---- |--------  |
-| [T5.1.1](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  | ChatYuan|  [百度网盘](https://pan.baidu.com/s/1huwRA2sOIYL8e7OFg0QTcg?pwd=6u59)   |  FP32|SpTokenizer|
-| | Flan-T5-small| [百度网盘](https://pan.baidu.com/s/1SDjh_c0BQnjW3s0DhwHuyw?pwd=eefr)|  FP32|SpTokenizer|
-| | Flan-T5-base| [百度网盘](https://pan.baidu.com/s/1hpcF6pNqNMfzGqDMK0GNig?pwd=ukep ) |  FP32|SpTokenizer|
-| | Flan-T5-large| [百度网盘](https://pan.baidu.com/s/1aUtvyBXffdKyLZgSpMZs3A?pwd=1so0 ) |  FP32|SpTokenizer|
-| | Flan-T5-xl| [百度网盘](https://pan.baidu.com/s/1Lyf2BcIReQER4jpj1LfMZA?pwd=2epu ) |  FP32|SpTokenizer|
-| | MT5-large| [百度网盘](https://pan.baidu.com/s/1kIPArbQDZ0gsn-B3hzAjyg?pwd=vvoc )|  FP32|SpTokenizer|
-| | UMT5-small| [百度网盘](https://pan.baidu.com/s/1_e8fifYoJ_qxLYIH_Tyhjw?pwd=618x  ) |  FP32|SpTokenizer|
-| | UMT5-base| [百度网盘](https://pan.baidu.com/s/1ivKPkEVwjK9fOlcrzqfT8Q?pwd=phdf ) |  FP32|SpTokenizer|
-| | UMT5-xl| [百度网盘](https://pan.baidu.com/s/1QnI8X-zbO2qoi_-cV5tGxA?pwd=3a3h) |  FP32|SpTokenizer|
-|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [百度网盘](https://pan.baidu.com/s/1sERMXA2m5E35j18-XXYg0w )  | BF16|SpTokenizer|
-|| Gemma-2b-Code| [百度网盘](https://pan.baidu.com/s/1ae8G0rT9-5U5pZbt1tJoSA?pwd=tnkp) |  BF16|SpTokenizer|
-|| Gemma-2b-it| [百度网盘](https://pan.baidu.com/s/1fJ_5HB0yg7QNhi40_TyyKQ?pwd=5v5i) |  BF16|SpTokenizer|
-|| Gemma1.1-2b-it| [百度网盘](https://pan.baidu.com/s/1cO0u8LJigaRjqYL6kNp5Eg?pwd=wwxj) |  BF16|SpTokenizer|
-||Gemma-7b| [百度网盘](https://pan.baidu.com/s/1nKKS8M2fEQDspYnt4Wmb_w?pwd=r74j) |  BF16|SpTokenizer|
-|| Gemma-7b-Code| [百度网盘](https://pan.baidu.com/s/1Wibw0Jp8SVGtHhsJRVbeag?pwd=vsk8) |  BF16|SpTokenizer|
-|| Gemma-7b-it| [百度网盘](https://pan.baidu.com/s/16HUPKV6nlMU65TwgBQXgog?pwd=h1me) |  BF16|SpTokenizer|
-|| Gemma1.1-7b-it| [百度网盘](https://pan.baidu.com/s/1UZU1u9tK4ZYYaAucbwoyrA?pwd=f1rr) |  BF16|SpTokenizer|
-|| Gemma-7b-it-Code| [百度网盘](https://pan.baidu.com/s/1RbhV6K8xblhYh2Ha1YZmBQ?pwd=b427) |  BF16|SpTokenizer|
-|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [百度网盘](https://pan.baidu.com/s/192ftWGc64CyNa5UHZkXwwA?pwd=q2ft) |  BF16|AutoTokenizer|
-||Yi-6B-it | [百度网盘](https://pan.baidu.com/s/1klsfNCJzA3wXAFTLsFejZQ?pwd=mp4f) |  BF16|AutoTokenizer|
-||Yi-9B | [百度网盘](https://pan.baidu.com/s/1H6n7a49EgdQ2QmG4B8Yi6A?pwd=p4kg) |  BF16|AutoTokenizer|
-||Yi-1.5-6B | [百度网盘](https://pan.baidu.com/s/1tYFQMXfgeEnox4f66lm6sw?pwd=7rxa) |  BF16|AutoTokenizer|
-||Yi-1.5-9B | [百度网盘](https://pan.baidu.com/s/1VXxUD0pypINhUzsH70AdfA?pwd=jh5k) |  BF16|AutoTokenizer|
-||Llama3-8B | [百度网盘](https://pan.baidu.com/s/1HW8WUQsTK9gORTTFQOo93g?pwd=sk8n) |  BF16|AutoTokenizer|
-||Llama3-8B-it | [百度网盘](https://pan.baidu.com/s/1so6-DYAuoMIHTCNVGGhfYw?pwd=rd7a) |  BF16|AutoTokenizer|
-|[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [百度网盘](https://pan.baidu.com/s/1sAc7ML0YzG8j-hogtl3h2A?pwd=2rju)|  BF16|AutoTokenizer|
-|| Qwen-0.5B-it| [百度网盘](https://pan.baidu.com/s/19iOhprfo7ml7NF43jTtkLA?pwd=ak3d) |  BF16|AutoTokenizer|
-|| Qwen-1.8B| [百度网盘](https://pan.baidu.com/s/17_pcTakiYdQfpMOLoEBV2A?pwd=x3j9) |  BF16|AutoTokenizer|
-|| Qwen-1.8B-it| [百度网盘](https://pan.baidu.com/s/1z0uTOEjG006jIjTSFu9tvw?pwd=indg) |  BF16|AutoTokenizer|
-|| Qwen-4B| [百度网盘](https://pan.baidu.com/s/1IeINGv5gAKZUajDnAHUAlg?pwd=4m2q) |  BF16|AutoTokenizer|
-|| Qwen-4B-it| [百度网盘](https://pan.baidu.com/s/1_aIttv66J6RNCoYWRcd2lQ?pwd=6yuw) |  BF16|AutoTokenizer|
-|| Qwen-7B| [百度网盘](https://pan.baidu.com/s/1c0ifemUKUxnIJA_ia4kcnQ?pwd=7ptp) |  BF16|AutoTokenizer|
-|| Qwen-7B-it| [百度网盘](https://pan.baidu.com/s/1QK0WpZYVM3TxBHmd6iKgvg?pwd=hh2f) |  BF16|AutoTokenizer|
-|| Qwen-14B| [百度网盘](https://pan.baidu.com/s/18PbVxmX5ShawUGXeOHwfig?pwd=9pcx) |  BF16|AutoTokenizer|
-|| Qwen-14B-it| [百度网盘](https://pan.baidu.com/s/1B4926w8BA6YcXypOs6uWrA?pwd=y6pr) |  BF16|AutoTokenizer|
-|| Qwen2-0.5B| [百度网盘](https://pan.baidu.com/s/1TmlJOV8C1uE8tGefg-c-bg?pwd=tfce)|  BF16|AutoTokenizer|
-|| Qwen2-0.5B-it| [百度网盘](https://pan.baidu.com/s/1KehaJ5z-DWz7TQRdJPEkJw?pwd=m6fh ) |  BF16|AutoTokenizer|
-|| Qwen2-1.5B| [百度网盘](https://pan.baidu.com/s/1k_RQGsyrlpy1gbZFIdPfHA?pwd=5kp9) |   BF16|AutoTokenizer|
-|| Qwen2-1.5B-it| [百度网盘](https://pan.baidu.com/s/1jigReZSfxEsmWrSojsQoiQ?pwd=7gpd) |  BF16|AutoTokenizer|
-|| Qwen2-7B| [百度网盘](https://pan.baidu.com/s/1VN-vuPwGoxnAEODa1fKwcw?pwd=yuk7) |  BF16|AutoTokenizer|
-|| Qwen2-7B-it| [百度网盘](https://pan.baidu.com/s/1o0qmsX4g6w0rvOWCA43uRQ?pwd=gmew) | BF16|AutoTokenizer|
+| [T5.1.1](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  | ChatYuan|  [ModelScope]() |  FP32|SpTokenizer|
+| | Flan-T5-small| [ModelScope]() |  FP32|SpTokenizer|
+| | Flan-T5-base| [ModelScope]() |  FP32|SpTokenizer|
+| | Flan-T5-large| [ModelScope]() |  FP32|SpTokenizer|
+| | Flan-T5-xl| [ModelScope]() |  FP32|SpTokenizer|
+| | MT5-large| [ModelScope]() |  FP32|SpTokenizer|
+| | UMT5-small| [ModelScope]() |  FP32|SpTokenizer|
+| | UMT5-base| [ModelScope]() |  FP32|SpTokenizer|
+| | UMT5-xl| [ModelScope]() |  FP32|SpTokenizer|
+|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [ModelScope]() |  BF16|SpTokenizer|
+|| Gemma-2b-Code| [ModelScope]() |  BF16|SpTokenizer|
+|| Gemma-2b-it|[ModelScope]() |  BF16|SpTokenizer|
+|| Gemma1.1-2b-it| [ModelScope]() |  BF16|SpTokenizer|
+||Gemma-7b| [ModelScope]() |  BF16|SpTokenizer|
+|| Gemma-7b-Code| [ModelScope]() |  BF16|SpTokenizer|
+|| Gemma-7b-it|[ModelScope]() |  BF16|SpTokenizer|
+|| Gemma1.1-7b-it| [ModelScope]() |  BF16|SpTokenizer|
+|| Gemma-7b-it-Code|[ModelScope]() |  BF16|SpTokenizer|
+|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-6B-it | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-9B | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-1.5-6B | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-1.5-9B | [ModelScope]() | BF16|AutoTokenizer|
+||Llama3-8B | [ModelScope]() | BF16|AutoTokenizer|
+||Llama3-8B-it | [ModelScope]() | BF16|AutoTokenizer|
+|[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-0.5B-it| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-1.8B| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-1.8B-it| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-4B| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-4B-it| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-7B| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-7B-it| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-14B| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen-14B-it| [ModelScope]() | BF16|AutoTokenizer|
+|| Qwen2-0.5B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-0.5B-Keras/summary) | BF16|AutoTokenizer|
+|| Qwen2-0.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-0.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
+|| Qwen2-1.5B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-1.5B-Keras/summary) | BF16|AutoTokenizer|
+|| Qwen2-1.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-1.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
+|| Qwen2-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Keras/summary) | BF16|AutoTokenizer|
+|| Qwen2-7B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
