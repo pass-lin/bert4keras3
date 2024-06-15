@@ -114,15 +114,15 @@ jax和tensorflow后端只能在linux使用cuda
 | | UMT5-small| [ModelScope]() |  FP32|SpTokenizer|
 | | UMT5-base| [ModelScope]() |  FP32|SpTokenizer|
 | | UMT5-xl| [ModelScope]() |  FP32|SpTokenizer|
-|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [ModelScope]() |  BF16|SpTokenizer|
-|| Gemma-2b-Code| [ModelScope]() |  BF16|SpTokenizer|
-|| Gemma-2b-it|[ModelScope]() |  BF16|SpTokenizer|
-|| Gemma1.1-2b-it| [ModelScope]() |  BF16|SpTokenizer|
-||Gemma-7b| [ModelScope]() |  BF16|SpTokenizer|
-|| Gemma-7b-Code| [ModelScope]() |  BF16|SpTokenizer|
-|| Gemma-7b-it|[ModelScope]() |  BF16|SpTokenizer|
-|| Gemma1.1-7b-it| [ModelScope]() |  BF16|SpTokenizer|
-|| Gemma-7b-it-Code|[ModelScope]() |  BF16|SpTokenizer|
+|[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_2b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma-2b-Code| [ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_2b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma-2b-it|[ModelScope](https://www.modelscope.cn/models/q935499957/gemma_instruct_2b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma1.1-2b-it| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_1.1_instruct_2b_en-Keras/summary) |  BF16|SpTokenizer|
+||Gemma-7b| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_7b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma-7b-Code| [ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_7b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma-7b-it|[ModelScope](https://www.modelscope.cn/models/q935499957/gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma1.1-7b-it| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_1.1_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
+|| Gemma-7b-it-Code|[ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
 |[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-6B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Chat-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-9B-Keras/summary) | BF16|AutoTokenizer|
