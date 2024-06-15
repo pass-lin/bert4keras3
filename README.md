@@ -105,15 +105,15 @@ jax和tensorflow后端只能在linux使用cuda
 ### 通过build_transformer_model( keras_weights_path='xx.weights.h5'）方法读取权重，只能使用keras3加载
   | 模型分类| 模型名称 |  权重链接|数据类型|分词器|
   | -------------- | -------------------------- | ------------------------------------------------------------ |---- |--------  |
-| [T5.1.1](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  | ChatYuan|  [ModelScope]() |  FP32|SpTokenizer|
-| | Flan-T5-small| [ModelScope]() |  FP32|SpTokenizer|
-| | Flan-T5-base| [ModelScope]() |  FP32|SpTokenizer|
-| | Flan-T5-large| [ModelScope]() |  FP32|SpTokenizer|
-| | Flan-T5-xl| [ModelScope]() |  FP32|SpTokenizer|
-| | MT5-large| [ModelScope]() |  FP32|SpTokenizer|
-| | UMT5-small| [ModelScope]() |  FP32|SpTokenizer|
-| | UMT5-base| [ModelScope]() |  FP32|SpTokenizer|
-| | UMT5-xl| [ModelScope]() |  FP32|SpTokenizer|
+| [T5.1.1](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  | ChatYuan|  [ModelScope](https://www.modelscope.cn/models/q935499957/ChatYuan-Keras/summary) |  FP32|SpTokenizer|
+| | Flan-T5-small| [ModelScope](https://www.modelscope.cn/models/q935499957/flan-t5-small-Keras/summary) |  FP32|SpTokenizer|
+| | Flan-T5-base| [ModelScope](https://www.modelscope.cn/models/q935499957/flan-t5-base-Keras/summary) |  FP32|SpTokenizer|
+| | Flan-T5-large| [ModelScope](https://www.modelscope.cn/models/q935499957/flan-t5-large-Keras/summary) |  FP32|SpTokenizer|
+| | Flan-T5-xl| [ModelScope](https://www.modelscope.cn/models/q935499957/flan-t5-xl-Keras/summary) |  FP32|SpTokenizer|
+| | MT5-large| [ModelScope](https://www.modelscope.cn/models/q935499957/mt5-large-Keras/summary) |  FP32|SpTokenizer|
+| | UMT5-small| [ModelScope](https://www.modelscope.cn/models/q935499957/umt5-small-Keras/summary) |  FP32|SpTokenizer|
+| | UMT5-base| [ModelScope](https://www.modelscope.cn/models/q935499957/umt5-base-Keras/summary) |  FP32|SpTokenizer|
+| | UMT5-xl| [ModelScope](https://www.modelscope.cn/models/q935499957/umt5-xl-Keras/summary) |  FP32|SpTokenizer|
 |[Gemma](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)| Gemma-2b| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_2b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma-2b-Code| [ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_2b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma-2b-it|[ModelScope](https://www.modelscope.cn/models/q935499957/gemma_instruct_2b_en-Keras/summary) |  BF16|SpTokenizer|
