@@ -123,11 +123,11 @@ jax和tensorflow后端只能在linux使用cuda
 || Gemma-7b-it|[ModelScope]() |  BF16|SpTokenizer|
 || Gemma1.1-7b-it| [ModelScope]() |  BF16|SpTokenizer|
 || Gemma-7b-it-Code|[ModelScope]() |  BF16|SpTokenizer|
-|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope]() | BF16|AutoTokenizer|
-||Yi-6B-it | [ModelScope]() | BF16|AutoTokenizer|
-||Yi-9B | [ModelScope]() | BF16|AutoTokenizer|
+|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Keras/summary) | BF16|AutoTokenizer|
+||Yi-6B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Chat-Keras/summary) | BF16|AutoTokenizer|
+||Yi-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-6B-Keras/summary) | BF16|AutoTokenizer|
-||Yi-1.5-9B | [ModelScope]() | BF16|AutoTokenizer|
+||Yi-1.5-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3-8B | [ModelScope]() | BF16|AutoTokenizer|
 ||Llama3-8B-it | [ModelScope]() | BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-0.5B-Keras/summary) | BF16|AutoTokenizer|
