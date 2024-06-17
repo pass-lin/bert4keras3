@@ -42,9 +42,9 @@ pip3 install --upgrade keras
 比如在keras3.3.3的情况下，官方推荐的版本是jax 0.4.23，那安装可以这么写  
 ```
 #cuda12
-pip3 install jax[cuda12_pip]==0.4.23 --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+pip install -U "jax[cuda12]==0.4.23" --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 #cuda11
-pip3 install jax[cuda11_pip]==0.4.23 --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+pip install -U "jax[cuda118]==0.4.23" --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 pip3 install --upgrade keras
 ```
