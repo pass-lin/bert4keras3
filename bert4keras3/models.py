@@ -12,6 +12,7 @@ from bert4keras3.Models.T5models import *
 from bert4keras3.Models.GPTs import *
 from bert4keras3.Models.GAUs import *
 from bert4keras3.Models.LLamas import *
+from bert4keras3.Models.RWKV import *
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
     """
@@ -96,6 +97,7 @@ def build_transformer_model(
         'llama':Llama, 
         'qwen':Llama, 
         'yi':Llama, 
+        'rwkv6':RWKV6,
         'misakat5':MisakaT5,
     }
 

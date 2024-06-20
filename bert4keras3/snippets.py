@@ -7,7 +7,6 @@ import logging
 import numpy as np
 from collections import defaultdict
 from bert4keras3.backend import  keras
-import tensorflow as tf
 _open_ = open
 is_py2 = six.PY2
 

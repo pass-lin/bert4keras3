@@ -6,7 +6,7 @@ Created on Mon Apr 22 14:20:44 2024
 """
 
 import numpy as np
-from bert4keras3.backend import load_tf,keras,backlib,lora_model
+from bert4keras3.backend import keras,backlib,lora_model
 from bert4keras3.layers import *
 from bert4keras3.snippets import insert_arguments
 from bert4keras3.snippets import delete_arguments
@@ -186,7 +186,6 @@ class Transformer(object):
                     o, a = self.layers[name](inputs, **arguments)
                     self.attention_scores = a
                     return o
-            
             return self.layers[name](inputs, **arguments)
 
     def get_inputs(self):
@@ -399,6 +398,24 @@ class Transformer(object):
         raise('this model not support cache model')
     def get_custom_position_ids(self):
         return self.custom_position_ids
+    def build_cache_model(self,input_lengths:list,end_token,
+                          search_mode='greedy',k=1,progress_print=False,index_bias=0):
+        
+        inputs=self.get_cache_inputs(input_lengths)
+
+        out = self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+
+        model = keras.Model(inputs,out)
+        inputs = []
+        for modelin in model.inputs: 
+            shape=keras.ops.shape(modelin)
+            shape=[1 if t==None else t for t in shape]
+            inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
+        self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+        
+        return model
 class LM_Mask(object):
     """定义下三角Attention Mask（语言模型用）
     """
@@ -622,24 +639,7 @@ class LM_Mask(object):
 
         self.custom_position_ids = old_flag
         return ops.cast(out[0][key],'int32')
-    def build_cache_model(self,input_lengths:list,end_token,
-                          search_mode='greedy',k=1,progress_print=False,index_bias=0):
-        
-        inputs=self.get_cache_inputs(input_lengths)
-
-        out = self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
-                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
-
-        model = keras.Model(inputs,out)
-        inputs = []
-        for modelin in model.inputs: 
-            shape=keras.ops.shape(modelin)
-            shape=[1 if t==None else t for t in shape]
-            inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
-        self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
-                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
-        
-        return model
+    
 class UniLM_Mask(LM_Mask):
     """定义UniLM的Attention Mask（Seq2Seq模型用）
     其中source和target的分区，由segment_ids来表示。

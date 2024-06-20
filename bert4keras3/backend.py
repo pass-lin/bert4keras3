@@ -8,9 +8,6 @@ import numpy as np
 from functools import wraps
 is_tf_keras = strtobool(os.environ.get('TF_KERAS', '0'))
 lora_model = strtobool(os.environ.get('ENABLE_LORA', '0'))
-load_tf = strtobool(os.environ.get('LOAD_TF', '1'))
-if load_tf:
-    import tensorflow as tf
 #jax使用flash参考https://github.com/nshepperd/flash_attn_jax/releases这里安装flash
 enable_flashatt = strtobool(os.environ.get('FLASH_ATTN', '0'))
 os.environ["KERAS_BACKEND"]=os.environ.get("KERAS_BACKEND", 'tensorflow')
@@ -58,20 +55,13 @@ else:
                 ord=None
             return torch.linalg.norm(tensor, ord, axis, keepdims)  
     elif backlib=='jax':
-        def recompute_grad(call):
-            if not do_recompute:
-                return call
-            return jax.checkpoint(call)
         def norm(tensor, ord='euclidean', axis=None, keepdims=None):
             if ord=='euclidean':
                 ord=None
             return jax.numpy.linalg.norm(tensor, ord, axis, keepdims)
         
     else:
-        def recompute_grad(call):
-           if not do_recompute:
-               return call
-           return tf.recompute_grad(call)
+        import tensorflow as tf
         norm=tf.norm
 ops.norm=norm
 # 判断是否启用重计算（通过时间换空间）

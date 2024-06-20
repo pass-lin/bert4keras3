@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from bert4keras3.backend import keras, ops, is_tf_keras,K,tf
+from bert4keras3.backend import keras, ops, is_tf_keras,K
 from bert4keras3.backend import align, sequence_masking,backlib
 from bert4keras3.backend import recompute_grad,int_shape,integerize_shape
 from keras import initializers, activations
@@ -18,7 +18,7 @@ from bert4keras3.Layers_add.GP import *
 from bert4keras3.Layers_add.LayerNorms import *
 from bert4keras3.Layers_add.Attentions import *
 from bert4keras3.Layers_add.FFN import *
-
+from bert4keras3.Layers_add.Rwkv_layer import *
 
 
 
