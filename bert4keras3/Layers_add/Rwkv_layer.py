@@ -30,8 +30,10 @@ class DecomposerDense(Layer):
 class TimeShift(Layer):
     def __init__(self,name="time_shift"):
         super(TimeShift, self).__init__(name=name)
-    def call(self, inputs):
+    def call(self, inputs,cache_x=None):
         x = ops.pad(inputs,[[0,0],[1,0],[0,0]],constant_values=0.)[:,:-1,:]
+        if cache_x is not None:
+            x = ops.slice_update(x,[0,0,0],cache_x)
         o = x - inputs
         return o
     def compute_output_shape(self, input_shape):
@@ -45,8 +47,8 @@ class ChannelMix(Layer):
         self.supports_masking = True
     def call(self, inputs,rnn_mode = False):
         if rnn_mode:
-            x,xx = inputs[:]
-            xx = xx-x
+            x = inputs[0]
+            xx = self.timeshift(x,inputs[1])
         else:
             x = inputs
             xx = self.timeshift(inputs)
@@ -148,7 +150,7 @@ class TimeMix(Layer):
             initial_state = None
        
         if rnn_mode:
-            x_shift = inputs[n]-x
+            x_shift = self.timeshift(x,inputs[n])
         else:
             x_shift = self.timeshift(x)
         

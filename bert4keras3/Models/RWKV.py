@@ -51,15 +51,13 @@ class RWKV6(Transformer):
         
         super().set_inputs(inputs, additional_input_layers)
         if self.input_state:
-            for i in range(self.num_hidden_layers):
-                self.inputs.append(
-                    self.apply(
-                    layer=keras.Input, shape=(
+            states =self.apply(
+                    layer=keras.Input, shape=(self.num_hidden_layers,
                         self.hidden_size // self.attention_head_size,
                         self.attention_head_size,self.attention_head_size), 
-                        name=str(i)+'-State'
+                        name='Stack-Statess',dtype=self.wkv_dtype
                 )
-                )
+            self.inputs.append(states)
     def get_mask(self,x):
         if self.attention_bias is None:
 
@@ -118,7 +116,7 @@ class RWKV6(Transformer):
             arguments['with_state']=True
         if self.input_state:
             arguments['initial_state']=True
-            inputs.append(self.inputs[index+1])
+            inputs.append(self.inputs[-1][:,index])
         
         out = self.apply(
             inputs = inputs,
@@ -260,7 +258,7 @@ class RWKV6(Transformer):
     def set_outputs(self, outputs):
         super().set_outputs(outputs)
         if self.output_state:
-            self.outputs+=self.states
+            self.outputs.append(ops.stack(self.states,1))
     def slice_inputs(self,inputs,key,index):
         return ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
     def get_prefill_mask(self,x):
@@ -285,9 +283,13 @@ class RWKV6(Transformer):
         x = inputs[0]
         
         if self.input_state:
-            initial_states = inputs[1:]
+            rnn_mode = True
+            states = list(ops.unstack(inputs[1],self.num_hidden_layers,axis=1))
+            last_xs = list(ops.unstack(inputs[2],self.num_hidden_layers*2,axis=1))
         else:
-            initial_states = None
+            rnn_mode = False
+            states = [None]*self.num_hidden_layers
+            last_xs = [None]*self.num_hidden_layers*2
         key = 0
         class start_index(keras.Layer):
             def call(self,x):
@@ -319,14 +321,15 @@ class RWKV6(Transformer):
         mask = self.get_prefill_mask(z)
         z = self.apply_embeddings([z])
         self.end_token = end_token  
-        last_xs = []
-        states = []
         for i in range(self.num_hidden_layers):
+            initial_states = states[i]
+            last_x = last_xs[i*2:i*2+2]
             out=self.apply_main_cache_layers(z,i,initial_state=initial_states,
-                                             mask=mask,rnn_mode=False,last_x=None,last_x_index=index)
+                                            mask=mask,rnn_mode=rnn_mode,last_x=last_x,last_x_index=index)
+
             z = out[0]
-            last_xs+=out[1]
-            states.append(out[2])
+            last_xs[i*2:i*2+2]=out[1][:]
+            states[i] = out[2]
         length = input_lengths[0]
         
         def cond(inputs, states, index,last_xs , flags):
@@ -402,7 +405,7 @@ class RWKV6(Transformer):
         )
         out_ids = ops.cast(out[0][key],'int32')
         if self.output_state:
-            return [out_ids]+out[1]
+            return [out_ids,ops.stack(out[1],axis=1),ops.stack(last_xs,axis=1)]
         return out_ids
     def get_cache_inputs(self,lengths:list):
         x_in = self.apply(
@@ -410,13 +413,30 @@ class RWKV6(Transformer):
         )
         inputs = [x_in]
         if self.input_state:
-            for i in range(self.num_hidden_layers):
-                inputs.append(
-                    self.apply(
-                    layer=keras.Input, shape=(
+            inputs.append(
+                self.apply(
+                    layer=keras.Input, shape=(self.num_hidden_layers,
                         self.hidden_size // self.attention_head_size,
                         self.attention_head_size,self.attention_head_size), 
-                        name=str(i)+'-Cache-State',dtype=self.wkv_dtype
+                        name='Stack-Statess',dtype=self.wkv_dtype
+
                 )
+            )
+
+            inputs.append(
+                self.apply(
+                    layer=keras.Input, shape=(
+                        self.num_hidden_layers*2,
+                        1,
+                        self.hidden_size), 
+                        name='Stack-Last-X'
                 )
+            )
         return inputs
+    def build_cache_model(self, input_lengths: list, end_token, search_mode='greedy', k=1, progress_print=False, index_bias=0,
+                          input_state=False,output_state=False):
+        olds = [self.input_state,self.output_state]
+        self.input_state,self.output_state = input_state,output_state
+        model = super().build_cache_model(input_lengths, end_token, search_mode, k, progress_print, index_bias)
+        self.input_state,self.output_state = olds[:]
+        return model
