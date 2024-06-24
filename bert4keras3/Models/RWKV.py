@@ -230,10 +230,10 @@ class RWKV6(Transformer):
             inputs=[xi, x], layer=keras.layers.Add, name='%s-Add' % channelmix_name
         )
         return x,[now_time_x,now_channal_x],out[1]
-    def enable_state_tunig(self):
+    def enable_state_tunig(self,time_shitf_tuning=False):
         for layer in self.layers.values():
-            if isinstance(layer,TimeMix):
-                layer.enable_state_tunig()
+            if isinstance(layer,TimeMix) or isinstance(layer,ChannelMix):
+                layer.enable_state_tunig(time_shitf_tuning)
             elif not lora_model:
                 layer.trainable = False
     def apply_final_layers(self, x):

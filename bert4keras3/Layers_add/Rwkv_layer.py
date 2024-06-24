@@ -45,10 +45,15 @@ class ChannelMix(Layer):
         self.hidden_size = hidden_size
         self.expand_size = expand_size
         self.supports_masking = True
+        self.state_tuning = False
+        self.time_shitf_tuning = False
     def call(self, inputs,rnn_mode = False):
         if rnn_mode:
             x = inputs[0]
             xx = self.timeshift(x,inputs[1])
+        elif self.state_tuning and self.time_shitf_tuning:
+            x = inputs
+            xx = self.timeshift(inputs,self.last_x)
         else:
             x = inputs
             xx = self.timeshift(inputs)
@@ -73,6 +78,29 @@ class ChannelMix(Layer):
         self.dense_value = Dense(self.hidden_size,use_bias=False,name="dense_v")
         self.dense_receptance = Dense(self.hidden_size,activation=ops.sigmoid,use_bias=False,name="dense_r")
         self.hidden_size = self.hidden_size
+        
+    def enable_state_tunig(self,time_shitf_tuning=False):
+        if self.state_tuning:
+            raise ValueError(
+                "state_tuning is already enabled. "
+                "This can only be done once per layer."
+            )
+        self.time_shitf_tuning = time_shitf_tuning
+        if time_shitf_tuning:
+            self._tracker.unlock()
+            self.last_x = self.add_weight(
+                name="lora_last_x",
+                shape=(1,1,self.hidden_size),
+                initializer='zeros',dtype=self.wkv_dtype
+            )
+            self.time_mix_r.trainable = False
+            self.time_mix_k.trainable = False
+            self.dense_key.trainable = False
+            self.dense_receptance.trainable = False
+            self.dense_value.trainable = False
+            
+            self._tracker.lock()
+            self.state_tuning = True
     def get_config(self):
         config = {
             'hidden_size':self.hidden_size,
@@ -118,6 +146,7 @@ class TimeMix(Layer):
         assert head_size % 4 ==0
         assert head_size % head_size == 0
         num_heads = hidden_size // head_size    
+        self.time_shitf_tuning = False
         self.layer_idx = layer_idx
         self.head_size= head_size
         self.hidden_size = hidden_size
@@ -148,9 +177,11 @@ class TimeMix(Layer):
             initial_state = ops.cast(self.initial_state,self.wkv_dtype)
         else:
             initial_state = None
-       
+        
         if rnn_mode:
             x_shift = self.timeshift(x,inputs[n])
+        elif self.state_tuning and self.time_shitf_tuning:
+            x_shift = self.timeshift(x,self.last_x)
         else:
             x_shift = self.timeshift(x)
         
@@ -205,7 +236,7 @@ class TimeMix(Layer):
         self.group_norm = GroupNorm(self.hidden_size,self.head_size,name="group_ln",dtype=self.wkv_dtype)
         self.dense_o = Dense(self.hidden_size,use_bias=False,name="dense_o")
         self.initial_state = None
-    def enable_state_tunig(self):
+    def enable_state_tunig(self,time_shitf_tuning=False):
         if self.state_tuning:
             raise ValueError(
                 "state_tuning is already enabled. "
@@ -215,8 +246,15 @@ class TimeMix(Layer):
         self.initial_state = self.add_weight(
             name="lora_kernel_a",
             shape=(1,self.hidden_size // self.head_size,self.head_size,self.head_size),
-            initializer='zeros',
+            initializer='zeros',dtype=self.wkv_dtype
         )
+        if time_shitf_tuning:
+            self.last_x = self.add_weight(
+                name="lora_last_x",
+                shape=(1,1,self.hidden_size),
+                initializer='zeros',dtype=self.wkv_dtype
+            )
+        self.time_shitf_tuning = time_shitf_tuning
         self.dense_xr.trainable = False
         self.dense_xw.trainable = False
         self.dense_xk.trainable = False
