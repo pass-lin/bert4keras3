@@ -501,7 +501,20 @@ class LM_Mask(object):
     def slice_inputs(self,inputs,key,index):
         return ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
     def get_new_inputs(self,inputs,key,xs,index=None):
-        return inputs[:key]+[xs]+inputs[key+1:]
+        if self.is_seq2seq:#这里是懒得测试t5了，t5保持源代码
+            return inputs[:key]+[xs]+inputs[key+1:]
+        new_inputs = []
+        for t in inputs[:key]:
+            if t.shape==inputs[key].shape:
+                t= ops.expand_dims(ops.take(t,index,axis=1),1)
+            new_inputs.append(t)
+        new_inputs.append(xs)
+        for t in inputs[key+1:]:
+            if t.shape==inputs[key].shape:
+                t= ops.expand_dims(ops.take(t,index,axis=1),1)
+            new_inputs.append(t)
+        return new_inputs
+        
     def cache_call(self,inputs:list,input_lengths:list,end_token,
                    search_mode='greedy',k=1,progress_print=True,index_bias=0):
         old_flag = self.custom_position_ids
