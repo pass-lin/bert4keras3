@@ -23,8 +23,14 @@ class TakeLayer(Layer):
 class SearchBase(Layer):
     def __init__(self, end_token,k=1, **kwargs):
         super(SearchBase, self).__init__(**kwargs)
-        self.k = k
+        if isinstance(k,list):
+            self.k = k[0]
+            self.topk = k[1]
+        else:
+            self.k = k
+            self.topk = None
         self.end_token=end_token
+        self.seed = keras.random.SeedGenerator(None)
     def get_config(self):
         config = {
             'k': self.k,
@@ -40,7 +46,7 @@ class SearchBase(Layer):
             # sure we have full precision here.
             x,
             1,
-            seed=np.random.randint(1,2147483648),
+            seed=self.seed,
             dtype="int32",
         )
         
@@ -64,7 +70,7 @@ class TopkSearch(GreedySearch):
         top_k_pred, top_k_indices = ops.top_k(
             t[:,0],
             k=self.k,
-            sorted=False,
+            sorted=True,
         )
         
         sample_indices = self.sample(top_k_pred)
@@ -73,7 +79,7 @@ class TopkSearch(GreedySearch):
 
 class ToppSearch(TopkSearch):
     def search(self,t):
-        cutoff = ops.shape(t)[-1]
+        cutoff = ops.shape(t)[-1] if self.topk is None or self.topk>=ops.shape(t)[-1] else self.topk
         sorted_preds, sorted_indices = ops.top_k(
             t[:,0], k=cutoff, sorted=True
         )

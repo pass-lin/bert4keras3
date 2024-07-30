@@ -35,10 +35,12 @@ class MultiHeadAttention(Layer):
         max_wavelength=10_000.0,
         scaling_factor=1.0,
         flatten_o_dense =  True,#为了适配gemma
+        GQA_mode=False,
         **kwargs
     ):
         super(MultiHeadAttention, self).__init__(**kwargs)
         self.heads = heads
+        self.GQA_mode = GQA_mode
         self.head_size = head_size
         self.flatten_o_dense=flatten_o_dense
         self.max_wavelength = max_wavelength
@@ -242,9 +244,9 @@ class MultiHeadAttention(Layer):
                 vw = value_cache
         else:
             cache = None
-        if enable_flashatt:
+        if enable_flashatt and not use_cache:
             is_causal = False
-            if a_bias is not None:
+            if a_bias is not None :
                 is_causal = True
             softmax_scale = 1.
             if self.attention_scale:
@@ -254,8 +256,8 @@ class MultiHeadAttention(Layer):
         # Attention
         q_shape = ops.shape(qw)
         b,s = q_shape[:-2]
-        if self.query_head!=self.heads:
-            
+    
+        if self.GQA_mode=='gemma':
             qw = ops.reshape(
                 qw,
                 (
@@ -266,8 +268,11 @@ class MultiHeadAttention(Layer):
                 ),
             )
             a = ops.einsum("btkgh,bskh->bkgts",qw,kw)
-            
         else:
+            if self.GQA_mode=='llama':
+                num_key_value_groups = self.query_head // self.heads
+                kw = ops.repeat(kw, repeats=num_key_value_groups, axis=2)
+                vw = ops.repeat(vw, repeats=num_key_value_groups, axis=2)
             a = ops.einsum('bjhd,bkhd->bhjk', qw, kw)
         
         
@@ -289,7 +294,7 @@ class MultiHeadAttention(Layer):
             A = self.dropout(A)
 
         # 完成输出
-        if self.query_head!=self.heads:
+        if self.GQA_mode=='gemma':
             o = ops.einsum("bkgts,bskh->btkgh", A, vw)
             o = ops.reshape(o, (b, s, self.query_head, -1))
         else:
@@ -335,6 +340,7 @@ class MultiHeadAttention(Layer):
             'head_size': self.head_size,
             'out_dim': self.out_dim,
             'key_size': self.key_size,
+            'GQA_mode':self.GQA_mode,
             'use_bias': self.use_bias,
             'normalization': self.normalization,
             'attention_scale': self.attention_scale,

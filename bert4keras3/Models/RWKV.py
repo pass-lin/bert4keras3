@@ -17,10 +17,8 @@ class RWKV6(Transformer):
         self.output_state = output_state
         self.states = []
         self.time_decay_size = time_decay_size
-        if backlib == 'torch':
-            self.wkv_dtype = keras.config.floatx()
-        else:
-            self.wkv_dtype = 'float32'
+        self.wkv_dtype = 'float32'
+            
     def get_inputs(self):
         x_in = self.apply(
             layer=keras.Input, shape=(self.sequence_length,), name='Input-Token',dtype='int32'
@@ -151,7 +149,7 @@ class RWKV6(Transformer):
             inputs = x,
             layer = keras.layers.LayerNormalization,
             epsilon=1e-5,
-            name='%s-Norm' % channelmix_name
+            name='%s-Norm' % channelmix_name,dtype='float32'
         )
         
         x = self.apply_ffn_layer(x,channelmix_name)
@@ -172,7 +170,7 @@ class RWKV6(Transformer):
             layer = ChannelMix,
             hidden_size = self.hidden_size,
             expand_size = self.intermediate_size,
-            name = name
+            name = name,
         )
     def apply_main_cache_layers(self, x, index,initial_state=None,mask=None,rnn_mode=False,last_x=None,last_x_index=None):
         """RWKV的主体是基于Self-Attention的模块
@@ -318,18 +316,24 @@ class RWKV6(Transformer):
             def compute_output_shape(self, input_shape):
                 return input_shape
         z = Slices()(x,index)
+        
         mask = self.get_prefill_mask(z)
-        z = self.apply_embeddings([z])
-        self.end_token = end_token  
-        for i in range(self.num_hidden_layers):
-            initial_states = states[i]
-            last_x = last_xs[i*2:i*2+2]
-            out=self.apply_main_cache_layers(z,i,initial_state=initial_states,
-                                            mask=mask,rnn_mode=rnn_mode,last_x=last_x,last_x_index=index)
+        prefill_flag = ops.all(ops.not_equal(index,0))
+        if keras.utils.is_keras_tensor(prefill_flag):
+            prefill_flag = True
+        if not self.input_state or prefill_flag:
+            z = self.apply_embeddings([z])
+            if backlib=='jax': 
+                z *= ops.cast(mask[...,None],z.dtype)
+            for i in range(self.num_hidden_layers):
+                initial_states = states[i]
+                last_x = last_xs[i*2:i*2+2]
+                out=self.apply_main_cache_layers(z,i,initial_state=initial_states,
+                                                mask=mask,rnn_mode=rnn_mode,last_x=last_x,last_x_index=index)
 
-            z = out[0]
-            last_xs[i*2:i*2+2]=out[1][:]
-            states[i] = out[2]
+                z = out[0]
+                last_xs[i*2:i*2+2]=out[1][:]
+                states[i] = out[2]
         length = input_lengths[0]
         
         def cond(inputs, states, index,last_xs , flags):
@@ -355,7 +359,9 @@ class RWKV6(Transformer):
                                              mask=flags,rnn_mode=True,last_x=last_x)
 
                 z = out[0]
-                last_xs[i*2:i*2+2]=out[1][:]
+                #last_xs[i*2:i*2+2]=out[1][:]
+                last_xs[i*2] = ops.where(ops.expand_dims(flags,-1),out[1][0],last_xs[i*2])
+                last_xs[i*2+1] = ops.where(ops.expand_dims(flags,-1),out[1][1],last_xs[i*2+1])
                 states[i] = out[2]
             o = self.apply_final_layers(z)
             #print(o[:,:,:20])
@@ -364,13 +370,16 @@ class RWKV6(Transformer):
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
             return (inputs, states, index,last_xs , flags)
         num_hidden_layers = self.num_hidden_layers
+        self.end_token = end_token 
         class WhileLayer(keras.Layer):
             def __init__(self,wkv_dtype,**kwargs):
                 super().__init__(**kwargs)
                 self.wkv_dtype = wkv_dtype
             def call(self, x):
                 inputs, states, index,last_xs =  x[:]
-                flags = ops.ones([ops.shape(inputs[key])[0],1],dtype='bool')
+                xs = ops.expand_dims(ops.take(inputs[key],index,axis=1),1)
+                flags = ops.not_equal(xs,end_token)
+                #flags = ops.ones([ops.shape(inputs[key])[0],1],dtype='bool')
                 for i in range(len(states)):
                     states[i] = ops.cast(states[i],self.wkv_dtype)
                 

@@ -157,10 +157,8 @@ class TimeMix(Layer):
         self.decomposer_size = decomposer_size
         self.state_tuning = False
         self.time_decay_size = time_decay_size
-        if backlib == 'torch':
-            self.wkv_dtype = self.compute_dtype
-        else:
-            self.wkv_dtype = 'float32'
+        self.wkv_dtype = 'float32'
+            
     def call(self, inputs,initial_state=False,input_mask=True,with_state=False,rnn_mode = False):
         x,n = inputs[0],1
         

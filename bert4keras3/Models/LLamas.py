@@ -24,6 +24,7 @@ class Gemma(LM_Mask,RoFormer):
         self.use_bias = use_bias
         self.layer_norm_type = RMSNormalization
         self.ffn_type = GemmaFeedForward
+        self.GQA_mode = 'gemma'
     def apply_embeddings(self, inputs):
         inputs = inputs[:]
         
@@ -130,6 +131,7 @@ class Gemma(LM_Mask,RoFormer):
             key_size=self.attention_key_size,
             attention_dropout=self.attention_dropout_rate,
             kernel_initializer=self.initializer,
+            GQA_mode = self.GQA_mode,
             name=attention_name
         )
         x = self.apply(
@@ -272,3 +274,4 @@ class Llama(Gemma):
                                     share_emebding=share_emebding,**kwargs)
         self.layer_norm_type = LlamaLayerNorm
         self.ffn_type = LLamaFeedForward
+        self.GQA_mode = 'llama'

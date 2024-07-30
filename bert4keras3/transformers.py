@@ -40,8 +40,13 @@ class Transformer(object):
         layers=None,  # 外部传入的Keras层
         prefix=None,  # 层名前缀
         name=None,  # 模型名称
+        penalty = 1.0,
         segment_attention=False,
         o_bias=None,
+        penalty_window = None,
+        max_penalty_range = None,
+        temperature = 1.0,
+        
         query_head=None,
         **kwargs
     ):
@@ -82,6 +87,12 @@ class Transformer(object):
         self.custom_position_ids = False
         self.o_bias = o_bias
         self.query_head = query_head
+        self.penalty = penalty
+        self.with_lm = 'linear'
+        self.with_mlm = 'linear'
+        self.temperature = temperature
+        self.penalty_window = penalty_window
+        self.max_penalty_range = max_penalty_range
     def build(
         self,
         attention_caches=None,
@@ -355,8 +366,37 @@ class Transformer(object):
                     print('%s, but ignored.' % e)
                 else:
                     raise e
-            
     def Search(self,inputs,k=1,mode='greedy'):
+        if self.temperature!=1 or self.penalty!=1:
+            assert self.with_lm == 'linear' and (self.with_mlm=='linear' or self.with_mlm==False)#这两个必须要是linear才可以用重复系数，一般来说一个模型只需要设定一个就好
+            
+            [o,index,ids,flags] = inputs
+            if self.penalty!=1:
+                if self.penalty_window!=None:
+                    assert ids.shape[-1]%self.penalty_window==0#必须要能整除
+                    ids_windows = ops.reshape(ids,[-1,ids.shape[-1]//self.penalty_window,self.penalty_window])
+                    ids_windows = ops.concatenate([ids_windows,ops.pad(ids_windows,[[0,0],[1,0],[0,0]])[:,:-1]],-1)
+                    past_id = ops.take(ids_windows,index//self.penalty_window,axis=1)
+                    
+                else:
+                    past_id = ids
+                if self.max_penalty_range!=None:
+                    token_nums = ops.one_hot(past_id,o.shape[-1],dtype=o.dtype,axis=-1)
+                    token_nums = ops.sum(token_nums,axis=1)
+                    assert self.max_penalty_range[0]<self.max_penalty_range[1] #第二个要比第一个小
+                    token_nums = ops.where(ops.logical_and(token_nums>=self.max_penalty_range[0],token_nums<=self.max_penalty_range[1]) ,
+                                           token_nums,0)[:,None]
+                else:
+                    token_nums = 1
+                
+                penalty = ops.power(self.penalty,token_nums)
+                scores = ops.multi_hot(past_id,o.shape[-1],dtype=o.dtype)
+                scores = ops.expand_dims(scores,1)
+                scores = ops.where(o>0,scores/penalty,scores*penalty)
+                o = ops.where(scores!=0,o*scores,o)
+            
+            o = ops.softmax(o/self.temperature,-1)
+            inputs = [o,index,ids,flags]
         if mode=='topp':
             return self.apply(
                 inputs=inputs,
@@ -412,7 +452,13 @@ class Transformer(object):
             shape=keras.ops.shape(modelin)
             shape=[1 if t==None else t for t in shape]
             inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
-        self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+        if backlib=='torch':
+            import torch
+            with torch.no_grad():  
+                self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+        else:
+            self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
                        search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
         
         return model
