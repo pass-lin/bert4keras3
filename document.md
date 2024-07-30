@@ -15,6 +15,7 @@
       - [bert4keras3.layers.LayerNorms.LayerNormalization\[同时支持bert4keras\]](#bert4keras3layerslayernormslayernormalization同时支持bert4keras)
       - [bert4keras3.layers.LayerNorms.RMSNormalization](#bert4keras3layerslayernormsrmsnormalization)
       - [bert4keras3.layers.LayerNorms.LlamaLayerNorm](#bert4keras3layerslayernormsllamalayernorm)
+      - [bert4keras3.layers.LayerNorms.GroupNorm](#bert4keras3layerslayernormsgroupnorm)
     - [bert4keras3.layers.FFN](#bert4keras3layersffn)
       - [bert4keras3.layers.FFN.FeedForward\[同时支持bert4keras\]](#bert4keras3layersffnfeedforward同时支持bert4keras)
       - [bert4keras3.layers.FFN.GemmaFeedForward](#bert4keras3layersffngemmafeedforward)
@@ -31,6 +32,11 @@
     - [bert4keras3.layers.Attentions](#bert4keras3layersattentions)
       - [bert4keras3.layers.Attentions.MultiHeadAttention\[同时支持bert4keras\]](#bert4keras3layersattentionsmultiheadattention同时支持bert4keras)
       - [bert4keras3.layers.Attentions.GatedAttentionUnit\[同时支持bert4keras\]](#bert4keras3layersattentionsgatedattentionunit同时支持bert4keras)
+    - [bert4keras3.layers.Rwkv\_layer](#bert4keras3layersrwkv_layer)
+      - [bert4keras3.layers.Rwkv\_layer.DecomposerDense](#bert4keras3layersrwkv_layerdecomposerdense)
+      - [bert4keras3.layers.Rwkv\_layer.TimeShift](#bert4keras3layersrwkv_layertimeshift)
+      - [bert4keras3.layers.Rwkv\_layer.TimeShift](#bert4keras3layersrwkv_layertimeshift-1)
+      - [bert4keras3.layers.Rwkv\_layer.TimeMix](#bert4keras3layersrwkv_layertimemix)
   - [bert4keras3.backend](#bert4keras3backend)
     - [启动Lora](#启动lora)
     - [启动Flash-attention](#启动flash-attention)
@@ -66,6 +72,8 @@
     - [bert4keras3.models.T5\_Encoder\[同时支持bert4keras\]](#bert4keras3modelst5_encoder同时支持bert4keras)
     - [bert4keras3.models.T5\_Decoder\[同时支持bert4keras\]](#bert4keras3modelst5_decoder同时支持bert4keras)
     - [bert4keras3.models.T5\[同时支持bert4keras\]](#bert4keras3modelst5同时支持bert4keras)
+    - [bert4keras3.models.RWKV6](#bert4keras3modelsrwkv6)
+
 
 # api说明
 为了能同时兼容bert4keras文档的功能，如果bert4keras也支持的内容我会额外标注。但是需要注意的是，所有涉及kv cache的部分bert4keras都是不支持的
@@ -275,7 +283,13 @@ offset: 是否使用偏移向量（beta）
  )
  ```
  与 RMSNormalization基本一致，区别是会先转成fp32再做ln运算再转回来
-
+#### bert4keras3.layers.LayerNorms.GroupNorm
+```python
+class GroupNorm(Layer):
+    def __init__(self,hidden_size,head_size,epsilon=64*1e-5):
+```
+hidden_size:正整数，输入张量的维度  
+head_size：每个group的维度必须能和hidden_size整除  
  ### bert4keras3.layers.FFN
 #### bert4keras3.layers.FFN.FeedForward[同时支持bert4keras]
   ```python
@@ -295,6 +309,7 @@ kernel_initializer: Dense层权重矩阵的初始化器。
 输入形状： (batch_size, …, input_dim)。
 
 输出形状： 形状与输入相同。
+
 #### bert4keras3.layers.FFN.GemmaFeedForward
   ```python
 GemmaFeedForward( 
@@ -478,6 +493,7 @@ MultiHeadAttention(
     rope_mode='su',#不支持bert4keras
     max_wavelength=10_000.0,#不支持bert4keras
     scaling_factor=1.0,#不支持bert4keras
+    GQA_mode = 'llama'
  )
   ```
 heads：头的数量  
@@ -540,6 +556,7 @@ units: 隐藏的中间维度
 key_size：头的维度  
 activation：激励函数  
 use_bias: 是否使用bias  
+GQA_mode:GQA有两种实现方法，一种是llama的一种是gemma的。推荐使用默认的llama实现  
 normalization：对于注意力矩阵的归一化方法，分别是'softmax'（经典方法），'softmax-fp32'（强制使用float32计算softmax），['softmax_plus'](https://kexue.fm/archives/9019),['squared_relu'](https://kexue.fm/archives/9019)  
 attention_scale:布尔值，是否对att做scale  
 self_attention:如果是True，那query和key会来自同一个矩阵，通过ScaleOffset制造差异。如果是False，那query和key分别来自两个Dense  
@@ -553,8 +570,66 @@ call( inputs,a_bias=None, p_bias=None)
 和MultiHeadAttention一样，输入inputs与参数有关  
 1.如果self_attention是True，那inputs是[x],x的shape是[batch_size,seq_len,dims]。否则inputs和MultiHeadAttention一样是[q,k,v]  
 2.如果a_bias是True，要在inputs后加入和MultiHeadAttention一样的casual mask  
-3.如果p_bias是'rotary'，那要在MultiHeadAttention后加入bert4keras3.layers.Embeddings.SinusoidalPositionEmbedding(mode='zeros')的输出
+3.如果p_bias是'rotary'，那要在MultiHeadAttention后加入bert4keras3.layers.Embeddings.SinusoidalPositionEmbedding(mode='zeros')的输出  
+### bert4keras3.layers.Rwkv_layer  
+在1.4.0版本里bert4keras3加入了对rwkv6的支持，关于rwkv6本身自己的介绍可以参考原作者的文章https://zhuanlan.zhihu.com/p/694593540  
+#### bert4keras3.layers.Rwkv_layer.DecomposerDense
 
+```python
+class DecomposerDense(Layer):
+    def __init__(self,hidden_size,decomposer_size,use_bias=False,name="decomposed_dense"):
+        super(DecomposerDense,self).__init__(name=name)
+        self.hidden_size = hidden_size
+        self.decomposer_size = decomposer_size
+        self.use_bias = use_bias
+```
+rwkv6相较于rwkv5多了一个lora层。值得就是这个DecomposerDense。所以参数含义和lora一致，hidden_size是高维的维度，decomposer_size是低秩的维度，use_bias是低秩转回高秩是否使用bias。  
+中间的激励函数写死为tanh了。 
+#### bert4keras3.layers.Rwkv_layer.TimeShift
+```python
+class TimeShift(Layer):
+    def __init__(self,name="time_shift"):
+        super(TimeShift, self).__init__(name=name)
+    def call(self, inputs,cache_x=None):
+        x = ops.pad(inputs,[[0,0],[1,0],[0,0]],constant_values=0.)[:,:-1,:]
+        if cache_x is not None:
+            x = ops.slice_update(x,[0,0,0],cache_x)
+        o = x - inputs
+        return o
+```
+RWKV特有的time-shitf层，定义的时候不需要输入参数。  
+如果输入的cache_x是空的情况下，就只对inputs本身做time-shitf。如果cache_x不为空，则inputs的第一个token和cache_x相加。  
+假设inputs是一个[b,h,d]的tensor的话，cache_x则应该是一个[b,1,d]的tensor。
+#### bert4keras3.layers.Rwkv_layer.TimeShift
+```python
+class ChannelMix(Layer):
+    def __init__(self,hidden_size,expand_size,**kwargs):
+        super(ChannelMix, self).__init__(**kwargs)
+        self.hidden_size = hidden_size
+        self.expand_size = expand_size
+    def call(self, inputs,rnn_mode = False):
+        ....
+        return output#a tensor has same shape like inputs
+```
+这是rwkv中类似transoformre ffn的层，因此参数的功能也类似  
+hidden_size:输入x的维度  
+expand_size:中间层的维度  
+主要需要重点说明的是call的参数。众所周知rwkv作为rnn模型，在训练和推理的时候会稍有不同。在训练的时候rwkv有着和transformer类似的行为，模型绝大部分是并行的，而推理的时候因为time-shift的存在，即使是ffn也是类似rnn的模式。  
+如果rnn_mode是False，那么inputs应该是一个单独的张量。他会独自执行ffn的功能。  
+如果是True，那么inputs是一个由两个tensor组成的list。由于这主要是在推理的时候使用，那么此时第一个的list是一个[b,1,d]的tensor，可想而知的是他独自是没法做time-shift的，因为这需要来自上一个token的信息。自然而然，第二个tensor也是一个[b,1,d]的tensor，而他代表着上一个token的信息。  
+#### bert4keras3.layers.Rwkv_layer.TimeMix
+```python
+class TimeMix(Layer):
+    def __init__(self,rwkv_kernel,
+    hidden_size,decomposer_size,head_size,
+    time_decay_size=64,**kwargs):
+
+```
+这里是rwkv的核心层，起到了和self-attention类似的作用，可以看作是一个线性attn  
+rwkv_kernel：wkv算子需要一个单独的kernel做计算，我们这里提供了一个多后端的rwkv kernel实现。https://github.com/infiy-quine/RWKV6_Keras_Operator  
+hidden_size,decomposer_size这两个参数参考DecomposerDense的说明。   
+head_size：rwkv6会把模型分为多个头做计算，和MHA类似，但区别是这里的头只包含token自身的信息。  
+time_decay_size：rwkv的w层也会过一个DecomposerDense层，但是他的decomposer_size是由这个参数所定义的。
 ## bert4keras3.backend
 
 ### 启动Lora
@@ -675,7 +750,8 @@ def build_transformer_model(
     application='encoder',
     return_keras_model=True,
     keras_weights_path=None,#不支持bert4keras
-    version=None
+    version=None,
+    **kwargs
 )
 ```
 config_path:字符串，config的路径  
@@ -684,7 +760,9 @@ model：模型的类型
 application:主要是对bert类模型扩展用，候选为'lm'和'unilm'  
 return_keras_model：返回的是keras的模型还是实例化的Transformer类  
 keras_weights_path：字符串，接受weights.h5存储格式的文件路径   
-version:主要是针对t5，因为t5有't5.1.1'和't5.1.0'两种情况  
+version:主要是针对t5，因为t5有't5.1.1'和't5.1.0'
+两种情况
+kwargs: 这里指的是bert4keras3.models里所有类的参数都可以通过这个进行传递    
 ### bert4keras3.models.Transformer[同时支持bert4keras]
 ```python
 class Transformer(object):
@@ -713,7 +791,10 @@ class Transformer(object):
         prefix=None,  # 层名前缀
         name=None,  # 模型名称
         o_bias=None,
-        query_head=None,
+        penalty = 1.0,
+        penalty_window = None,
+        max_penalty_range = None,
+        temperature = 1.0,
         **kwargs
     )
 ```
@@ -729,6 +810,11 @@ ignore_invalid_weights：为是否允许跳过名字不匹配的权重。默认�
 
 o_bias和query_head的作用参考MultiHeadAttention部分介绍  
 
+下面几个参数是bert4keras3-1.4.0加入的新功能。在build_cache_model生成的cache model中才会起效。但是需要注意的是，使用下面这几个参数要保住with_lm='linear',如果是roformer或者bert使用unilm模型，则with_mlm='linear'    
+penalty :生成模型的惩罚系数，可以参考https://blog.csdn.net/weixin_44826203/article/details/127495773.输入是1则不执行该参数  
+penalty_window ：重复惩罚的窗口，假penalty_window=128，那对于一个1024长度的模型来说会分为8个窗口，每个token解码的时候针对当前窗口之前的token和上一个窗口做重复解码惩罚。如果是None，窗口相当于全部token。  
+max_penalty_range ：重复惩罚的次数范围，输入是一个二维的list。比如输入是[2,5]，那么会统计窗口内的token出现次数.会对>=2的次数做惩罚,并且最大值为5  
+temperature = 1.0：生成模型解码的温度  
 ```python
 #构建kv-cache生成模型方法，bert4keras没有这个方法，涉及kv cache的请无视
 def build_cache_model(
@@ -748,7 +834,7 @@ input_lengths=[maxlen,maxlen]
 ```
 end_token:解码结束的token，碰到这个token会提前结束  
 search_mode：解码的方式，支持'greedy'、'topk'、'topp'三种  
-k:search_mode是greedy时无效，是topk时应该是一个大于1的整数，是topp时应该是0-1的浮点数  
+k:search_mode是greedy时无效，是topk时应该是一个大于1的整数，是topp时应该是0-1的浮点数.在1.4.0版本，当使用topp的时候输入可以是一个二维list。如果输入是list，那么第一个数代表原来的p值，第二个数topk的k值。会先使用topk选择前k个再使用topp选择k个中概率的前p个。  
 progress_print：在每个推理的step内是否展示进度条，只对torch后端有效  
 index_bias：主要是针对t5这种模型，会在decoder把0作为第一个token，所以index_bias设置为1.常见的模型可以不考虑这个
 
@@ -866,3 +952,43 @@ t5 = build_transformer_model(
 encoder = t5.encoder
 decoder = t5.decoder
 ```
+### bert4keras3.models.RWKV6
+```python
+class RWKV6(Transformer):
+    def __init__(
+    self,decomposer_size,
+    with_lm=True,
+    time_decay_size = 64,
+    **kwargs)：
+```
+定义这部分介绍的参数比较简单，绝大部分都和之前的介绍是一致的。decomposer_size和time_decay_size则可以参考time-mix层的介绍。
+
+```python
+def enable_state_tunig(self,
+        time_shitf_tuning=False
+        ):
+    for layer in self.layers.values():
+        if isinstance(layer,TimeMix) or isinstance(layer,ChannelMix):
+            layer.enable_state_tunig(time_shitf_tuning)
+        elif not lora_model:
+            layer.trainable = False
+```
+详细介绍参考原作者的文章https://zhuanlan.zhihu.com/p/695005541  
+通过这里来启动state-tuning，rwkv原作者的文章里只对了time-mix层的wkv算子做了state-tuning。但其实rwkv接受来自上一时间的信息不只是wkv算子，还有两个time-shift层也可以接受上一时间的信息。都可以看作来自上一时间的state。  
+因此我提供了time_shitf_tuning参数，如果设置为true则可以把time-shift也开启state-tuning。  
+并且该部分可以和lora混用。  
+```python
+def build_cache_model(self, 
+            input_lengths: list, 
+            end_token, 
+            search_mode='greedy', 
+            k=1, 
+            progress_print=False, 
+            index_bias=0,
+            input_state=False,
+            output_state=False):
+```
+构建生成模型的方法，大部分参数都和之前transformer使用的一样。主要增加了input_state和output_state两个参数。  
+如果output_state为true，那么模型除了输出生成结果，还会输出state。  
+同理如果input_state为true，那么在输入的时候你还需要输入模型的state。  
+这里的state指的是wkv层的state，两个time-shift层对应的state。
