@@ -145,13 +145,18 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen2-1.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-1.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Instruct-Keras/summary) | BF16|AutoTokenizer|
+|[RWKV6](https://github.com/infiy-quine/RWKV6_Keras_Operator)| Qwen2-1.6B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-1.6B-Keras) | BF16|RWKV_TOKENIZER|
+|| Qwen2-3B| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| Qwen2-7B| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| Qwen2-12B-it| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| Qwen2-14B| [ModelScope]() | BF16|RWKV_TOKENIZER|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
 - 注2：下载下来的ELECTRA权重，如果没有json配置文件的话，参考<a href="https://github.com/ymcui/Chinese-ELECTRA/issues/3">这里</a>自己改一个（需要加上`type_vocab_size`字段）。(苏神注)
 - 注3： 模型分类这里会跳转到使用的example
-- 注4：SpTokenizer指的是bert4keras3.tokenizers.SpTokenizer,AutoTokenizer指的是transformers的分词器。用法不同需要注意  
+- 注4：SpTokenizer和RWKV_TOKENIZER来自bert4keras3.tokenizers,AutoTokenizer指的是transformers的分词器。用法不同需要注意  
 - 注5：因为不能转换全部的权重，所以我提供了转化权重的脚本，有需要自己去转。
 - 注6：bert4keras3的新增加的模型权重均支持kv-cache生成
 - 注7: it模型指的是instruct模型，也就是我们俗话说的chat模型
