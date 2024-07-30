@@ -179,3 +179,8 @@ jax和tensorflow后端只能在linux使用cuda
 ## 4.25号更新，发布1.3版本  
 重新整理了苏神的代码,更新了对 Gemma,Qwen,和llama系列模型（llama3和Yi）的支持，转换了UMT5，FlanT5的权重，并且提供了转换脚本，大家可以自行转换权重
 
+## 7.30更新，发布1.4版本
+新版本可以在[build_transformer_model](https://github.com/pass-lin/bert4keras3/blob/main/document.md#bert4keras3modelsbuild_transformer_model%E5%90%8C%E6%97%B6%E6%94%AF%E6%8C%81bert4keras)penalty，penalty_window ,max_penalty_range,temperature四个参数。  
+详情可以参考[文档](https://github.com/pass-lin/bert4keras3/blob/main/document.md#bert4keras3modelstransformer%E5%90%8C%E6%97%B6%E6%94%AF%E6%8C%81bert4keras)。  
+增加了RWKV6的层及其模型的支持，关于层的详细介绍可以查看文档[RWKV_layer](https://github.com/pass-lin/bert4keras3/blob/main/document.md#bert4keras3layersrwkv_layer).   
+对于RWKV6更详细的介绍，我们单独创建了一个[RWKV6仓库](https://github.com/pass-lin/RWKV6-Keras)，在这里你可以看到关于本库对RWKV6的详细介绍
