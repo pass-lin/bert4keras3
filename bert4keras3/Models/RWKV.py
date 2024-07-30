@@ -9,7 +9,7 @@ class RWKV6(Transformer):
                  output_state=False,#输出每一层的state
                  **kwargs):
         super().__init__(**kwargs)
-        from rwkv_kernel import RWKVKernelOperator
+        from rwkv6_keras_operator import RWKVKernelOperator
         self.decomposer_size = decomposer_size
         self.with_lm = with_lm
         self.input_state = input_state

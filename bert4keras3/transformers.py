@@ -40,13 +40,12 @@ class Transformer(object):
         layers=None,  # 外部传入的Keras层
         prefix=None,  # 层名前缀
         name=None,  # 模型名称
-        penalty = 1.0,
         segment_attention=False,
         o_bias=None,
-        penalty_window = None,
-        max_penalty_range = None,
-        temperature = 1.0,
-        
+        penalty = 1.0,#生成模型的惩罚系数，可以参考https://blog.csdn.net/weixin_44826203/article/details/127495773
+        penalty_window = None,#重复惩罚的窗口，假如penalty_window=128，那对于一个1024长度的模型来说会分为8个窗口，每个token解码的时候针对当前窗口之前的token和上一个窗口做重复解码惩罚。如果是None，窗口相当于全部token
+        max_penalty_range = None,#重复惩罚的次数范围，输入是一个二维的list。比如输入是[2,5]，那么会统计窗口内的token出现次数.会对>=2的次数做惩罚,并且最大值为5
+        temperature = 1.0,#生成模型解码的温度
         query_head=None,
         **kwargs
     ):
@@ -384,8 +383,8 @@ class Transformer(object):
                     token_nums = ops.one_hot(past_id,o.shape[-1],dtype=o.dtype,axis=-1)
                     token_nums = ops.sum(token_nums,axis=1)
                     assert self.max_penalty_range[0]<self.max_penalty_range[1] #第二个要比第一个小
-                    token_nums = ops.where(ops.logical_and(token_nums>=self.max_penalty_range[0],token_nums<=self.max_penalty_range[1]) ,
-                                           token_nums,0)[:,None]
+                    token_nums = ops.where(token_nums>=self.max_penalty_range[0],token_nums,0)[:,None]
+                    token_nums = ops.minimum(token_nums,self.max_penalty_range[1])
                 else:
                     token_nums = 1
                 

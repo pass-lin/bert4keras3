@@ -1,6 +1,7 @@
 from bert4keras3.backend import ops,keras
 from bert4keras3.backend import Layer,backlib
 from keras.layers import Dense
+from bert4keras3.Layers_add.LayerNorms import GroupNorm
 def relu_square(x):
     return ops.square(ops.relu(x))
 
@@ -108,37 +109,7 @@ class ChannelMix(Layer):
         }
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
-class GroupNorm(Layer):
-    def __init__(self,hidden_size,head_size,epsilon=64*1e-5,name="group_norm",**kwargs):
-        super(GroupNorm,self).__init__(name=name,**kwargs)
 
-        self.hidden_size = hidden_size
-        self.head_size = head_size
-        self.num_heads = hidden_size // head_size
-        self.epsilon =epsilon
-        assert hidden_size % head_size == 0
-
-    def call(self,inputs):
-        B,T,C = ops.shape(inputs)
-        x = ops.reshape(inputs,(B,T,self.num_heads,self.head_size))
-        x =  ops.reshape(self.scale,(1,1,self.num_heads,self.head_size)) * self.group_ln(x) +  ops.reshape(self.offset,(1,1,self.num_heads,self.head_size))
-        o = ops.reshape(x,(B,T,C))
-        return o
-    def compute_output_shape(self, input_shape):
-        return input_shape
-    def build(self, input_shape):
-        super().build(input_shape)
-        self.scale = self.add_weight(shape=(self.num_heads,self.head_size))
-        self.offset = self.add_weight(shape=(self.num_heads,self.head_size))
-        self.group_ln = keras.layers.LayerNormalization(epsilon=64*1e-5,dtype=self.dtype)
-    def get_config(self):
-        config = {
-            'head_size':self.head_size,
-            'hidden_size':self.hidden_size,
-            'epsilon':self.epsilon
-        }
-        base_config = super().get_config()
-        return dict(list(base_config.items()) + list(config.items()))
 
 class TimeMix(Layer):
     def __init__(self,layer_idx,rwkv_kernel,hidden_size,decomposer_size,head_size,time_decay_size=64,**kwargs):
