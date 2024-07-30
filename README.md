@@ -145,11 +145,11 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen2-1.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-1.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Instruct-Keras/summary) | BF16|AutoTokenizer|
-|[RWKV6](https://github.com/infiy-quine/RWKV6_Keras_Operator)| Qwen2-1.6B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-1.6B-Keras) | BF16|RWKV_TOKENIZER|
-|| Qwen2-3B| [ModelScope]() | BF16|RWKV_TOKENIZER|
-|| Qwen2-7B| [ModelScope]() | BF16|RWKV_TOKENIZER|
-|| Qwen2-12B-it| [ModelScope]() | BF16|RWKV_TOKENIZER|
-|| Qwen2-14B| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|[RWKV6](https://github.com/infiy-quine/RWKV6_Keras_Operator)| RWKV6-1.6B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-1.6B-Keras) | BF16|RWKV_TOKENIZER|
+|| RWKV6-3B| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| RWKV6-7B| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| RWKV6-12B-it| [ModelScope]() | BF16|RWKV_TOKENIZER|
+|| RWKV6-14B| [ModelScope]() | BF16|RWKV_TOKENIZER|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
