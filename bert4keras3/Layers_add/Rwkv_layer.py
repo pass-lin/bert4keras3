@@ -173,7 +173,6 @@ class TimeMix(Layer):
             v = ops.where(mask[...,None],v,0)
             w = ops.where(mask[...,None],w,-1e9)
         r,w,k,v,u = ops.cast(r,self.wkv_dtype),ops.cast(w,self.wkv_dtype),ops.cast(k,self.wkv_dtype),ops.cast(v,self.wkv_dtype),ops.cast(self.time_faaaa,self.wkv_dtype)
-
         x,output_state = self.rwkv_kernel(r,k,v,w,u,with_state=with_state,init_state=initial_state)
         #if output_state is not None:
         #    output_state = ops.cast(output_state,self.compute_dtype)
