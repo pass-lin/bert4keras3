@@ -12,6 +12,6 @@
 [基于chatyuan的模型测试，进行了kv-cache优化。如果想使用cache模型一定要参考这个example。](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)    
 [Gemma模型的生成测试](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma-generate.py)  
 [千问模型的生成测试](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  
-[Yi(llama)模型的生成测试](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  
-
+[Yi(llama)模型的生成测试](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)    
+[RWKV模型的使用说明](https://github.com/pass-lin/RWKV6-Keras)  
 
