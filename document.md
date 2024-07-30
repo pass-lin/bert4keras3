@@ -811,7 +811,7 @@ ignore_invalid_weights：为是否允许跳过名字不匹配的权重。默认�
 o_bias和query_head的作用参考MultiHeadAttention部分介绍  
 
 下面几个参数是bert4keras3-1.4.0加入的新功能。在build_cache_model生成的cache model中才会起效。但是需要注意的是，使用下面这几个参数要保住with_lm='linear',如果是roformer或者bert使用unilm模型，则with_mlm='linear'    
-penalty :生成模型的惩罚系数，可以参考https://blog.csdn.net/weixin_44826203/article/details/127495773.输入是1则不执行该参数  
+penalty :生成模型的惩罚系数，可以参考[hf的实现](https://github.com/pass-lin/bert4keras3/blob/main/document.md).输入是1则不执行该参数  
 penalty_window ：重复惩罚的窗口，假penalty_window=128，那对于一个1024长度的模型来说会分为8个窗口，每个token解码的时候针对当前窗口之前的token和上一个窗口做重复解码惩罚。如果是None，窗口相当于全部token。  
 max_penalty_range ：重复惩罚的次数范围，输入是一个二维的list。比如输入是[2,5]，那么会统计窗口内的token出现次数.会对>=2的次数做惩罚,并且最大值为5  
 temperature = 1.0：生成模型解码的温度  
