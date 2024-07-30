@@ -53,8 +53,8 @@
   - [bert4keras3.models](#bert4keras3models)
     - [bert4keras3.models.extend\_with\_language\_model\[同时支持bert4keras\]](#bert4keras3modelsextend_with_language_model同时支持bert4keras)
     - [bert4keras3.models.extend\_with\_unified\_language\_model\[同时支持bert4keras\]](#bert4keras3modelsextend_with_unified_language_model同时支持bert4keras)
-    - [bert4keras3.models.build_transformer_model\[同时支持bert4keras\]](#bert4keras3modelsbuild_transformer_model同时支持bert4keras)
-    - [bert4keras3.models.Transformer\[同时支持bert4keras\]](#bert4keras3modelstransformer同时支持bert4keras-1)
+    - [bert4keras3.models.build\_transformer\_model\[同时支持bert4keras\]](#bert4keras3modelsbuild_transformer_model同时支持bert4keras)
+    - [bert4keras3.models.Transformer\[同时支持bert4keras\]](#bert4keras3modelstransformer同时支持bert4keras)
     - [bert4keras3.models.BERT\[同时支持bert4keras\]](#bert4keras3modelsbert同时支持bert4keras)
     - [bert4keras3.models.NEZHA\[同时支持bert4keras\]](#bert4keras3modelsnezha同时支持bert4keras)
     - [bert4keras3.models.ELECTRA\[同时支持bert4keras\]](#bert4keras3modelselectra同时支持bert4keras)
@@ -73,6 +73,7 @@
     - [bert4keras3.models.T5\_Decoder\[同时支持bert4keras\]](#bert4keras3modelst5_decoder同时支持bert4keras)
     - [bert4keras3.models.T5\[同时支持bert4keras\]](#bert4keras3modelst5同时支持bert4keras)
     - [bert4keras3.models.RWKV6](#bert4keras3modelsrwkv6)
+
 
 
 # api说明
