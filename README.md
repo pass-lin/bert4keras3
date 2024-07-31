@@ -148,7 +148,7 @@ jax和tensorflow后端只能在linux使用cuda
 |[RWKV6](https://github.com/pass-lin/RWKV6-Keras)| RWKV6-1.6B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-1.6B-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-3B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-3B-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-7B-Keras) | BF16|RWKV_TOKENIZER|
-|| RWKV6-12B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6--12B-it-Keras) | BF16|RWKV_TOKENIZER|
+|| RWKV6-12B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-12B-it-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-14B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-14B-Keras) | BF16|RWKV_TOKENIZER|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
