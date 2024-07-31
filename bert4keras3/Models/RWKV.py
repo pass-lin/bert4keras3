@@ -306,7 +306,7 @@ class RWKV6(Transformer):
         class Slices(keras.Layer):
             def call(self,x,index):
                 #return x
-                if backlib=='jax':
+                if backlib=='jax' or backlib=='tensorflow':
                     #jax不好编译，prefill要完全计算
                     return x
                 ids = ops.arange(start=0,stop=index+1)
@@ -323,7 +323,7 @@ class RWKV6(Transformer):
             prefill_flag = True
         if not self.input_state or prefill_flag:
             z = self.apply_embeddings([z])
-            if backlib=='jax': 
+            if backlib=='jax' or backlib=='tensorflow': 
                 z *= ops.cast(mask[...,None],z.dtype)
             for i in range(self.num_hidden_layers):
                 initial_states = states[i]

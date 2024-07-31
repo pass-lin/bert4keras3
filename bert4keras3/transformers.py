@@ -92,6 +92,7 @@ class Transformer(object):
         self.temperature = temperature
         self.penalty_window = penalty_window
         self.max_penalty_range = max_penalty_range
+        self.seed = keras.random.SeedGenerator()
     def build(
         self,
         attention_caches=None,
@@ -396,10 +397,13 @@ class Transformer(object):
             
             o = ops.softmax(o/self.temperature,-1)
             inputs = [o,index,ids,flags]
+        if backlib!='tensorflow':
+            self.seed = None
         if mode=='topp':
             return self.apply(
                 inputs=inputs,
                 layer=ToppSearch,
+                seed=self.seed,
                 k=k,
                 dtype='float32',
                 end_token=self.end_token,
@@ -410,6 +414,7 @@ class Transformer(object):
                 inputs=inputs,
                 layer=TopkSearch,
                 k=k,
+                seed=self.seed,
                 dtype='float32',
                 end_token=self.end_token,
                 
@@ -419,6 +424,7 @@ class Transformer(object):
                 inputs=inputs,
                 layer=GreedySearch,
                 k=k,
+                seed=self.seed,
                 dtype='float32',
                 end_token=self.end_token,
                 
@@ -439,7 +445,8 @@ class Transformer(object):
         return self.custom_position_ids
     def build_cache_model(self,input_lengths:list,end_token,
                           search_mode='greedy',k=1,progress_print=False,index_bias=0):
-        
+        if backlib=='torch':
+            progress_print=False
         inputs=self.get_cache_inputs(input_lengths)
 
         out = self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,

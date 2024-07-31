@@ -1,6 +1,6 @@
 #! -*- coding: utf-8 -*-
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 from bert4keras3 import backend,snippets,tokenizers
 from bert4keras3.backend import ops

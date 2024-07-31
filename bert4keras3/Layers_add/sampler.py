@@ -21,7 +21,7 @@ class TakeLayer(Layer):
         return input_shape
 
 class SearchBase(Layer):
-    def __init__(self, end_token,k=1, **kwargs):
+    def __init__(self, end_token,k=1,seed=None, **kwargs):
         super(SearchBase, self).__init__(**kwargs)
         if isinstance(k,list):
             self.k = k[0]
@@ -30,11 +30,15 @@ class SearchBase(Layer):
             self.k = k
             self.topk = None
         self.end_token=end_token
-        self.seed = keras.random.SeedGenerator(None)
+        if seed==None:
+            self.seed= keras.random.SeedGenerator()
+        else:
+            self.seed = seed
     def get_config(self):
         config = {
             'k': self.k,
-            'end_token':self.end_token
+            'end_token':self.end_token,
+            'seed':None,
         }
         base_config = super(SearchBase, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
