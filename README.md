@@ -150,6 +150,7 @@ jax和tensorflow后端只能在linux使用cuda
 || RWKV6-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-7B-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-12B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-12B-it-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-14B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-14B-Keras) | BF16|RWKV_TOKENIZER|
+|[Gemma2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma2-generate.py)  |gemma2_9b_en | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 <strong>注意事项</strong>
