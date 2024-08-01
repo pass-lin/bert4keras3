@@ -463,9 +463,6 @@ class Transformer(object):
             with torch.no_grad():  
                 self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
                        search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
-        else:
-            self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
-                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
         
         return model
 class LM_Mask(object):

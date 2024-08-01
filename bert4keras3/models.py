@@ -126,7 +126,7 @@ def build_transformer_model(
 
     transformer = MODEL(**configs)
     transformer.build(**configs)
-    if keras.__version__>'3.0':
+    if keras.__version__>'3.0' and backlib=='torch':
         #keras3不知道为什么attention需要走一次前向才能初始化
         inputs=[]
         for modelin in transformer.model.inputs: 
