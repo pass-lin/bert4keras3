@@ -1,4 +1,5 @@
 from bert4keras3.Models.Roformers import *
+
 class Gemma(LM_Mask,RoFormer):
     def __init__(self, with_lm=True,
                  max_wavelength=10_000.0,
@@ -10,6 +11,7 @@ class Gemma(LM_Mask,RoFormer):
                  input_scale =True,
                  share_emebding=True,
                  rope_mode='keras',
+                 
                  **kwargs):
         super(Gemma, self).__init__(**kwargs)
         self.with_lm = with_lm
@@ -25,6 +27,7 @@ class Gemma(LM_Mask,RoFormer):
         self.layer_norm_type = RMSNormalization
         self.ffn_type = GemmaFeedForward
         self.GQA_mode = 'gemma'
+        
     def apply_embeddings(self, inputs):
         inputs = inputs[:]
         
@@ -50,6 +53,7 @@ class Gemma(LM_Mask,RoFormer):
         )
         
         if self.segment_vocab_size > 0:
+            
             s = self.apply(
                 inputs=s,
                 layer=Embedding,
@@ -275,3 +279,152 @@ class Llama(Gemma):
         self.layer_norm_type = LlamaLayerNorm
         self.ffn_type = LLamaFeedForward
         self.GQA_mode = 'llama'
+class Gemma2(Gemma):
+    def __init__(self, logit_soft_cap=None,
+        use_sliding_window_attention=False,
+        sliding_window_size=4096,use_post_ffw_norm=False,
+        use_post_attention_norm=False,
+        query_head_dim_normalize=True,**kwargs):
+        super(Gemma2, self).__init__(**kwargs)
+        self.use_post_ffw_norm=use_post_ffw_norm
+        self.use_post_attention_norm=use_post_attention_norm
+        self.logit_soft_cap = logit_soft_cap
+        self.use_sliding_window_attention = use_sliding_window_attention
+        self.sliding_window_size = sliding_window_size
+        self.query_head_dim_normalize = query_head_dim_normalize
+    def apply_main_layers(self, inputs, index):
+        
+        if isinstance(inputs,list):
+            x = inputs[0]
+        else:
+            x = inputs
+
+        attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
+        feed_forward_name = 'Transformer-%d-FeedForward' % index
+        attention_mask = self.compute_attention_bias(index)
+
+        position_bias = self.compute_position_bias(x)
+
+        # Self Attention
+        xi = x
+
+        x = self.apply(
+            inputs=x,
+            layer=self.layer_norm_type,
+            epsilon=1e-6,
+            name='%s-Norm' % attention_name
+        )
+
+
+        arguments = {'attention_mask': attention_mask}
+        x = self.apply(
+            inputs=x,
+            layer=Gemma2Attention,
+            arguments=arguments,
+            num_key_value_heads=self.num_attention_heads,
+            head_dim=self.attention_head_size,
+            num_query_heads=self.query_head,
+            logit_soft_cap=self.logit_soft_cap,
+            use_sliding_window_attention=self.use_sliding_window_attention if index%2==0 else False,
+            sliding_window_size=self.sliding_window_size,
+            query_head_dim_normalize=self.query_head_dim_normalize,
+            kernel_initializer=self.initializer,
+            name=attention_name
+        )
+        if self.use_post_attention_norm:
+            x = self.apply(
+            inputs=x,
+            layer=self.layer_norm_type,
+            epsilon=1e-6,
+            name='%s-Norm-post' % attention_name
+        )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+        # Feed Forward
+        xi = x
+
+        x = self.apply(
+            inputs=x,
+            layer=self.layer_norm_type,
+            epsilon=1e-6,
+            name='%s-Norm' % feed_forward_name
+        )
+        x = self.apply_ffn(x,feed_forward_name)
+        if self.use_post_ffw_norm:
+            x = self.apply(
+                inputs=x,
+                layer=self.layer_norm_type,
+                epsilon=1e-6,
+                name='%s-Norm-post' % feed_forward_name
+            )
+        x = self.apply(
+            inputs=x,
+            layer=Dropout,
+            rate=self.dropout_rate,
+            name='%s-Dropout' % feed_forward_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+        return x
+    def apply_main_cache_layers(self, inputs, index,self_cache_update_index,
+                                cross_cache_update_index=None,
+                                attention_mask=None,position_bias=None,
+            
+                                ):
+        x,caches = inputs[:]
+        z = self.layer_norm_conds[0]
+
+        attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
+        feed_forward_name = 'Transformer-%d-FeedForward' % index
+
+        # Self Attention
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % attention_name
+        )
+        arguments = {'cache_update_index':self_cache_update_index}
+        
+        if attention_mask is not None:
+            arguments['attention_mask'] = attention_mask
+        x,cache = self.apply(
+            inputs=[x,caches[0]],
+            arguments=arguments,
+            name=attention_name
+        )
+        
+        caches[0] = cache
+        if self.use_post_attention_norm:
+            x = self.apply(
+            inputs=x,
+            name='%s-Norm-post' % attention_name
+        )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % attention_name
+        )
+        # Feed Forward
+        xi = x
+        x = self.apply(
+            inputs=self.simplify([x, z]),
+            name='%s-Norm' % feed_forward_name
+        )
+        x = self.apply_ffn(x,feed_forward_name)
+        if self.use_post_ffw_norm:
+            x = self.apply(
+                inputs=x,
+                name='%s-Norm-post' % feed_forward_name
+            )
+        x = self.apply(
+            inputs=[xi, x], layer=Add, name='%s-Add' % feed_forward_name
+        )
+        
+        
+        return [x,caches]

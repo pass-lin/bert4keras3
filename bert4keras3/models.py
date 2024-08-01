@@ -82,6 +82,7 @@ def build_transformer_model(
         'gpt2': GPT2,
         'gpt2_ml': GPT2_ML,
         't5': T5,
+        'gemma2':Gemma2,
         't5_encoder': T5_Encoder,
         't5_decoder': T5_Decoder,
         't5.1.0': T5,

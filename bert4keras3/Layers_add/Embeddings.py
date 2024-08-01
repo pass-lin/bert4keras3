@@ -24,7 +24,6 @@ class Embedding(keras.layers.Embedding):
         则等价于普通Embedding层；如果为dense，则等价于无bias的Dense层。
         """
         if mode == 'embedding':
-            
             return super(Embedding, self).call(inputs)
         else:
             kernel = ops.transpose(self.embeddings)
