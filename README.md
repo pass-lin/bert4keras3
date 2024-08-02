@@ -130,6 +130,8 @@ jax和tensorflow后端只能在linux使用cuda
 ||Yi-1.5-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3-8B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
+||Llama3.1-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3.1-8B-Keras/summary) | BF16|AutoTokenizer|
+||Llama3.1-8B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3.1-8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 |[千问](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-0.5B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen-0.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-0.5B-Chat-Keras/summary) | BF16|AutoTokenizer|
 || Qwen-1.8B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen1.5-1.8B-Keras/summary) | BF16|AutoTokenizer|
@@ -150,8 +152,15 @@ jax和tensorflow后端只能在linux使用cuda
 || RWKV6-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-7B-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-12B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-12B-it-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-14B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-14B-Keras) | BF16|RWKV_TOKENIZER|
-|[Gemma2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma2-generate.py)  |gemma2_9b_en | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
+|[Gemma2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma2-generate.py)  |gemma2-2b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_2b_en-Keras) | BF16|AutoTokenizer|
+||gemma2-2b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_2b_en-Keras) | BF16|AutoTokenizer|
+||gemma2-9b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
+||gemma2-9b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_9b_en-Keras) | BF16|AutoTokenizer|
+||gemma2-27b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_27b_en-Keras) | BF16|AutoTokenizer|
+||gemma2-27b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_27b_en-Keras) | BF16|AutoTokenizer|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
+
+
 
 <strong>注意事项</strong>
 - 注1：brightmart版albert的开源时间早于Google版albert，这导致早期brightmart版albert的权重与Google版的不完全一致，换言之两者不能直接相互替换。为了减少代码冗余，bert4keras的0.2.4及后续版本均只支持加载<u>Google版</u>以brightmart版中<u>带Google字眼</u>的权重。如果要加载早期版本的权重，请用<a href="https://github.com/bojone/bert4keras/releases/tag/v0.2.3">0.2.3版本</a>，或者考虑作者转换过的<a href="https://github.com/bojone/albert_zh">albert_zh</a>。(苏神注)
