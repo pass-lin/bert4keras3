@@ -444,7 +444,7 @@ class Transformer(object):
     def get_custom_position_ids(self):
         return self.custom_position_ids
     def build_cache_model(self,input_lengths:list,end_token,
-                          search_mode='greedy',k=1,progress_print=False,index_bias=0):
+                          search_mode='greedy',k=1,progress_print=False,index_bias=0,initial = True):
         if backlib=='torch':
             progress_print=False
         inputs=self.get_cache_inputs(input_lengths)
@@ -458,11 +458,15 @@ class Transformer(object):
             shape=keras.ops.shape(modelin)
             shape=[1 if t==None else t for t in shape]
             inputs.append(ops.convert_to_tensor(np.ones(shape),modelin.dtype))
-        if backlib=='torch':
-            import torch
-            with torch.no_grad():  
+        if initial:
+            if backlib=='torch':
+                import torch
+                with torch.no_grad():  
+                    self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
+                        search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+            else:
                 self.cache_call(inputs=inputs,input_lengths=input_lengths,end_token=end_token,
-                       search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
+                        search_mode=search_mode,k=k,progress_print=progress_print,index_bias=index_bias)
         
         return model
 class LM_Mask(object):

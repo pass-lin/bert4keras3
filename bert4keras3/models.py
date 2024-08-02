@@ -49,6 +49,7 @@ def build_transformer_model(
     application='encoder',
     return_keras_model=True,
     keras_weights_path=None,
+    initial=True,
     **kwargs
 ):
     """根据配置文件构建模型，可选加载checkpoint权重
@@ -126,7 +127,7 @@ def build_transformer_model(
 
     transformer = MODEL(**configs)
     transformer.build(**configs)
-    if keras.__version__>'3.0' and backlib=='torch':
+    if keras.__version__>'3.0' and initial:
         #keras3不知道为什么attention需要走一次前向才能初始化
         inputs=[]
         for modelin in transformer.model.inputs: 
