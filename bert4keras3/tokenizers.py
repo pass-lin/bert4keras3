@@ -545,7 +545,7 @@ class RWKV_TOKENIZER():
 
     def encode(self, src):
         if isinstance(src, str):
-            return [self.encodeBytes(src.encode("utf-8"))]
+            return self.encodeBytes(src.encode("utf-8"))
         elif isinstance(src, list):
             return [self.encodeBytes(s.encode("utf-8")) for s in src]
 
