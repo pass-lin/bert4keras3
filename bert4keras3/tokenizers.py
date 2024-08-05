@@ -550,7 +550,10 @@ class RWKV_TOKENIZER():
             return [self.encodeBytes(s.encode("utf-8")) for s in src]
 
     def decode(self, tokens):
+        if isinstance(tokens[0],int):
+            return self.decodeBytes(tokens).decode('utf-8')
         return [self.decodeBytes(batch).decode('utf-8') for batch in tokens]    
+        
         # try:
         #     return self.decodeBytes(tokens).decode('utf-8')
         # except:
