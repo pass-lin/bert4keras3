@@ -128,8 +128,6 @@ jax和tensorflow后端只能在linux使用cuda
 ||Yi-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-9B-Keras/summary) | BF16|AutoTokenizer|
-||Yi-1.5-34B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-34B-Keras/summary) | BF16|AutoTokenizer|
-||Yi-1.5-34B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-34B-Chat-Keras) | BF16|AutoTokenizer|
 ||Llama3-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3-8B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3.1-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3.1-8B-Keras/summary) | BF16|AutoTokenizer|
@@ -158,8 +156,6 @@ jax和tensorflow后端只能在linux使用cuda
 ||Gemma2-2b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_2b_en-Keras) | BF16|AutoTokenizer|
 ||Gemma2-9b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
 ||Gemma2-9b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_9b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-27b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_27b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-27b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_27b_en-Keras) | BF16|AutoTokenizer|
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 
