@@ -796,6 +796,7 @@ class Transformer(object):
         penalty_window = None,
         max_penalty_range = None,
         temperature = 1.0,
+        mask_output=None
         **kwargs
     )
 ```
@@ -816,6 +817,7 @@ penalty :生成模型的惩罚系数，可以参考[hf的实现](https://github.
 penalty_window ：重复惩罚的窗口，假penalty_window=128，那对于一个1024长度的模型来说会分为8个窗口，每个token解码的时候针对当前窗口之前的token和上一个窗口做重复解码惩罚。如果是None，窗口相当于全部token。  
 max_penalty_range ：重复惩罚的次数范围，输入是一个二维的list。比如输入是[2,5]，那么会统计窗口内的token出现次数.会对>=2的次数做惩罚,并且最大值为5  
 temperature = 1.0：生成模型解码的温度  
+mask_output:None或者是一个列表，如果是列表，那列表里的token将不会被解码出来  
 ```python
 #构建kv-cache生成模型方法，bert4keras没有这个方法，涉及kv cache的请无视
 def build_cache_model(
@@ -833,7 +835,7 @@ input_lengths：输入inputs的最大长度，是一个整数列表。长度与m
 maxlen=512
 input_lengths=[maxlen,maxlen]
 ```
-end_token:解码结束的token，碰到这个token会提前结束  
+end_token:解码结束的token，碰到这个token会提前结束。可以是一个int或一个int组成的list    
 search_mode：解码的方式，支持'greedy'、'topk'、'topp'三种  
 k:search_mode是greedy时无效，是topk时应该是一个大于1的整数，是topp时应该是0-1的浮点数.在1.4.0版本，当使用topp的时候输入可以是一个二维list。如果输入是list，那么第一个数代表原来的p值，第二个数topk的k值。会先使用topk选择前k个再使用topp选择k个中概率的前p个。  
 progress_print：在每个推理的step内是否展示进度条，只对torch后端有效  
