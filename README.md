@@ -149,7 +149,7 @@ jax和tensorflow后端只能在linux使用cuda
 || Qwen2-1.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-1.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2-7B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2-7B-Instruct-Keras/summary) | BF16|AutoTokenizer|
-|[千问2.5](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen-0.5B | [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2.5-0.5B-Keras/summary) | BF16|AutoTokenizer|
+|[千问2.5](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-Qwen-generate.py)  |Qwen2.5-0.5B | [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2.5-0.5B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2.5-0.5B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2.5-0.5B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2.5-1.8B| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2.5-1.8B-Keras/summary) | BF16|AutoTokenizer|
 || Qwen2.5-1.8B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/Qwen2.5-1.8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
