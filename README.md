@@ -210,3 +210,9 @@ jax和tensorflow后端只能在linux使用cuda
 详情可以参考[文档](https://github.com/pass-lin/bert4keras3/blob/main/document.md#bert4keras3modelstransformer%E5%90%8C%E6%97%B6%E6%94%AF%E6%8C%81bert4keras)。  
 增加了RWKV6的层及其模型的支持，关于层的详细介绍可以查看文档[RWKV_layer](https://github.com/pass-lin/bert4keras3/blob/main/document.md#bert4keras3layersrwkv_layer).   
 对于RWKV6更详细的介绍，我们单独创建了一个[RWKV6仓库](https://github.com/pass-lin/RWKV6-Keras)，在这里你可以看到关于本库对RWKV6的详细介绍
+
+## 8.4更新，发布1.5版本  
+增加了llama3.1和gemma2的支持  
+
+## 9.20更新，发布1.6版本 
+从keras nlp那里韩了deberta的支持，同时增加了qwen2.5的支持。并且把roformer v2转为了keras3的权重。
