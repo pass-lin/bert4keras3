@@ -134,14 +134,14 @@ jax和tensorflow后端只能在linux使用cuda
 || Gemma-7b-it|[ModelScope](https://www.modelscope.cn/models/q935499957/gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma1.1-7b-it| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_1.1_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma-7b-it-Code|[ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
-|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Keras/summary) | BF16|AutoTokenizer|
+|[Yi](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-6B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Chat-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-1.5-9B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-1.5-34B | [百度网盘](https://pan.baidu.com/s/14Zl5hB2Q9yrrRfek-U9v7A?pwd=q3x9) | BF16|AutoTokenizer|
 ||Yi-1.5-34B-it | [百度网盘](https://pan.baidu.com/s/1dzeTZOF62rr7B6rTRpO5eQ?pwd=k4my) | BF16|AutoTokenizer|
-||Llama3-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Keras/summary) | BF16|AutoTokenizer|
+|[Llama](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)|Llama3-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3-8B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3-8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3.1-8B | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3.1-8B-Keras/summary) | BF16|AutoTokenizer|
 ||Llama3.1-8B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Meta-Llama-3.1-8B-Instruct-Keras/summary) | BF16|AutoTokenizer|
