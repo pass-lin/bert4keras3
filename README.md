@@ -134,6 +134,12 @@ jax和tensorflow后端只能在linux使用cuda
 || Gemma-7b-it|[ModelScope](https://www.modelscope.cn/models/q935499957/gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma1.1-7b-it| [ModelScope](https://www.modelscope.cn/models/q935499957/gemma_1.1_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
 || Gemma-7b-it-Code|[ModelScope](https://www.modelscope.cn/models/q935499957/code_gemma_instruct_7b_en-Keras/summary) |  BF16|SpTokenizer|
+|[Gemma2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma2-generate.py)  |Gemma2-2b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_2b_en-Keras) | BF16|AutoTokenizer|
+||Gemma2-2b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_2b_en-Keras) | BF16|AutoTokenizer|
+||Gemma2-9b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
+||Gemma2-9b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_9b_en-Keras) | BF16|AutoTokenizer|
+||Gemma2-27b | [百度网盘](https://pan.baidu.com/s/1uJIHnKASHqZX56EIuWhimg?pwd=jhuf) | BF16|AutoTokenizer|
+||Gemma2-27b-it | [百度网盘](https://pan.baidu.com/s/1RMFOIHKGQf9Dp3TDXJNvjQ?pwd=7e1s) | BF16|AutoTokenizer|
 |[Yi](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-llama-generate.py)  |Yi-6B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-6B-it | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-6B-Chat-Keras/summary) | BF16|AutoTokenizer|
 ||Yi-9B | [ModelScope](https://www.modelscope.cn/models/q935499957/Yi-9B-Keras/summary) | BF16|AutoTokenizer|
@@ -175,12 +181,7 @@ jax和tensorflow后端只能在linux使用cuda
 || RWKV6-7B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-7B-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-12B-it| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-12B-it-Keras) | BF16|RWKV_TOKENIZER|
 || RWKV6-14B| [ModelScope](https://www.modelscope.cn/models/q935499957/RWKV6-14B-Keras) | BF16|RWKV_TOKENIZER|
-|[Gemma2](https://github.com/pass-lin/bert4keras3/blob/main/examples/test-gemma2-generate.py)  |Gemma2-2b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_2b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-2b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_2b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-9b | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_9b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-9b-it | [ModelScope](https://www.modelscope.cn/models/q935499957/gemma2_instruct_9b_en-Keras) | BF16|AutoTokenizer|
-||Gemma2-27b | [百度网盘](https://pan.baidu.com/s/1uJIHnKASHqZX56EIuWhimg?pwd=jhuf) | BF16|AutoTokenizer|
-||Gemma2-27b-it | [百度网盘](https://pan.baidu.com/s/1RMFOIHKGQf9Dp3TDXJNvjQ?pwd=7e1s) | BF16|AutoTokenizer|
+
 <!-- || | [百度网盘]() |  BF16|AutoTokenizer| -->
 
 
