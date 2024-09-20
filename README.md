@@ -106,7 +106,7 @@ jax和tensorflow后端只能在linux使用cuda
 #### Bert类模型
   | 模型分类| 模型名称 |  权重链接|支持kv-cache 生成|数据类型|分词器|
   | -------------- | -------------------------- | ------------------------------------------------------------ |-- |---- |--------  |
-  | [RoformerV2](https://github.com/pass-lin/bert4keras3/blob/main/examples/chatyuan-test-example.py)  | RoformerV2-Small-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Small-CN-Keras) |√|  FP32|Tokenizer|
+  | [RoformerV2](https://github.com/pass-lin/bert4keras3/blob/main/examples/roformerv2_extract_features.py)  | RoformerV2-Small-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Small-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Base-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Base-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Large-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Large-CN-Keras) |√|  FP32|Tokenizer|
 #### 生成类模型
