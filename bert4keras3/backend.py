@@ -325,6 +325,8 @@ def get_sequence_masking(
     x, mask=None, value=0, axis=None, bias=None
 ):
     if not (mask is None and bias is None):
+        if bias is not None:
+            bias = ops.cast(bias,'bool')
         if mask is None:
             if K.dtype(bias) == 'bool' or (backlib=='torch' and K.dtype(bias) == torch.bool):
                 mask = bias
@@ -425,7 +427,6 @@ def swish(x):
     """
     return ops.silu(x)
 
-
 def leaky_relu(x, alpha=0.2):
     """leaky relu函数（这样封装过后才有 __name__ 属性）
     """
@@ -442,8 +443,9 @@ def attention_normalize(a, mask=None, axis=-1, method='softmax', bias=None):
         mask = get_sequence_masking(a, mask, -np.inf, axis,bias)
         ori_dtype = a.dtype
         att_mask = mask
-        for i in range(ops.ndim(a)-ops.ndim(mask)):
-            att_mask = ops.expand_dims(att_mask,0)
+        if att_mask!=None:
+            for i in range(ops.ndim(a)-ops.ndim(mask)):
+                att_mask = ops.expand_dims(att_mask,0)
         return ops.cast(keras.layers.Softmax(dtype="float32",axis=axis)(a,mask=att_mask),ori_dtype)
     a, mask = sequence_masking(a, mask, -np.inf, axis, bias, True)
     

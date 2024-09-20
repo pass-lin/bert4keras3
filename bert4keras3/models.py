@@ -13,6 +13,7 @@ from bert4keras3.Models.GPTs import *
 from bert4keras3.Models.GAUs import *
 from bert4keras3.Models.LLamas import *
 from bert4keras3.Models.RWKV import *
+from bert4keras3.Models.Deberta import Deberta
 def extend_with_language_model(BaseModel):
     """添加下三角的Attention Mask（语言模型用）
     """
@@ -100,6 +101,7 @@ def build_transformer_model(
         'qwen':Llama, 
         'yi':Llama, 
         'rwkv6':RWKV6,
+        'deberta':Deberta,
         'misakat5':MisakaT5,
     }
 
@@ -132,7 +134,7 @@ def build_transformer_model(
         inputs=[]
         for modelin in transformer.model.inputs: 
             shape=keras.ops.shape(modelin)
-            shape=[1 if t==None else t for t in shape]
+            shape=[2 if t==None else t for t in shape]
             try:
                 shape[0] = len(keras.distribution.list_devices())
             except:

@@ -335,11 +335,20 @@ class RWKV6(Transformer):
                 last_xs[i*2:i*2+2]=out[1][:]
                 states[i] = out[2]
         length = input_lengths[0]
-        
-        def cond(inputs, states, index,last_xs , flags):
-            
+        if isinstance(self.end_token,list):
+            self.end_token = end_token = end_token[0]
+            end_tokens = end_token
+        else:
+            self.end_token = end_token
+            end_tokens = None
+        def cond(inputs, caches, index , flags):
             cond1 = ops.less(index,length-1)
-            cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
+            if end_tokens is not None:
+                cond2 = False
+                for token in end_tokens:
+                    cond2 = ops.logical_or(ops.logical_not(ops.all(ops.equal(inputs[key][:,index],token),-1)),cond2)
+            else:
+                cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
             return ops.logical_and(cond1,cond2)
         
         def body(inputs, states, index,last_xs , flags):
@@ -370,7 +379,7 @@ class RWKV6(Transformer):
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
             return (inputs, states, index,last_xs , flags)
         num_hidden_layers = self.num_hidden_layers
-        self.end_token = end_token 
+        
         class WhileLayer(keras.Layer):
             def __init__(self,wkv_dtype,**kwargs):
                 super().__init__(**kwargs)

@@ -47,6 +47,7 @@ class Transformer(object):
         max_penalty_range = None,#重复惩罚的次数范围，输入是一个二维的list。比如输入是[2,5]，那么会统计窗口内的token出现次数.会对>=2的次数做惩罚,并且最大值为5
         temperature = 1.0,#生成模型解码的温度
         query_head=None,
+        mask_output=None,#这部分token会被严禁掉
         **kwargs
     ):
         if keep_tokens is not None:
@@ -92,7 +93,9 @@ class Transformer(object):
         self.temperature = temperature
         self.penalty_window = penalty_window
         self.max_penalty_range = max_penalty_range
-        self.seed = keras.random.SeedGenerator()
+        self.mask_output =mask_output
+        if backlib=='tensorflow':
+            self.seed = keras.random.SeedGenerator()
     def build(
         self,
         attention_caches=None,
@@ -397,6 +400,9 @@ class Transformer(object):
             
             o = ops.softmax(o/self.temperature,-1)
             inputs = [o,index,ids,flags]
+        if self.mask_output!=None:
+            mask = ops.multi_hot(self.mask_output)
+            inputs[0] = (1-ops.reshape(mask,[1,1,-1]))*inputs[0]
         if backlib!='tensorflow':
             self.seed = None
         if mode=='topp':
@@ -598,8 +604,12 @@ class LM_Mask(object):
         z = self.apply_embeddings(inputs)
 
         self.compute_cache_position_bias(z)
-
-        self.end_token = end_token
+        if isinstance(self.end_token,list):
+            self.end_token = end_token = end_token[0]
+            end_tokens = end_token
+        else:
+            self.end_token = end_token
+            end_tokens = None
         #initial inputs and cache
 
         
@@ -630,7 +640,12 @@ class LM_Mask(object):
         
         def cond(inputs, caches, index , flags):
             cond1 = ops.less(index,length-1)
-            cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
+            if end_tokens is not None:
+                cond2 = False
+                for token in end_tokens:
+                    cond2 = ops.logical_or(ops.logical_not(ops.all(ops.equal(inputs[key][:,index],token),-1)),cond2)
+            else:
+                cond2 = ops.logical_not(ops.all(ops.equal(inputs[key][:,index],end_token),-1))
             return ops.logical_and(cond1,cond2)
         
         def body(inputs, caches, index , flags):
@@ -651,9 +666,10 @@ class LM_Mask(object):
             attention_mask = self.compute_cache_attention_bias(index=index)
 
             position_bias = self.compute_cache_position_bias(self_cache_update_index = index) 
-
+            
             for i in range(self.num_hidden_layers):
-                
+                #print(z)
+                #print(i)
                 layer_caches = caches[i*j:i*j+j]
                 out=self.apply_main_cache_layers(z+[layer_caches], i,self_cache_update_index=index,
                                             cross_cache_update_index=None,
@@ -664,12 +680,13 @@ class LM_Mask(object):
                 
                 caches[i*j:i*j+j]=cache
             
-
+                
+            #print('-')
             o = self.apply_final_layers(z)
             index += 1
 
             search_in = [o,index,inputs[key],flags]
-
+            
             inputs[key],flags = self.Search(search_in,k=k,mode=search_mode)
 
             return (inputs, caches, index , flags)
