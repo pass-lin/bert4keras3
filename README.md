@@ -109,10 +109,10 @@ jax和tensorflow后端只能在linux使用cuda
   | [RoformerV2](https://github.com/pass-lin/bert4keras3/blob/main/examples/roformerv2_extract_features.py)  | RoformerV2-Small-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Small-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Base-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Base-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Large-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Large-CN-Keras) |√|  FP32|Tokenizer|
-  | [Derberta](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_deberta.py)  | Deberta_v3_small_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_small_en-Keras) |x|  FP32|SpTokenizer|
-  || Deberta_v3_base_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_base_en-Keras) |x|  FP32|SpTokenizer|
-  || Deberta_v3_large_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_large_en-Keras) |x|  FP32|SpTokenizer|
-  || Deberta_v3_base_multi|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_base_multi-Keras) |x|  FP32|SpTokenizer|
+  | [Derberta](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_deberta.py)  | Deberta_v3_Small_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_small_en-Keras) |x|  FP32|SpTokenizer|
+  || Deberta_v3_Base_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_base_en-Keras) |x|  FP32|SpTokenizer|
+  || Deberta_v3_Large_en|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_large_en-Keras) |x|  FP32|SpTokenizer|
+  || Deberta_v3_Base_multi|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_base_multi-Keras) |x|  FP32|SpTokenizer|
 #### 生成类模型
   | 模型分类| 模型名称 |  权重链接|数据类型|分词器|
   | -------------- | -------------------------- | ------------------------------------------------------------ |---- |--------  |
