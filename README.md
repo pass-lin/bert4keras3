@@ -109,10 +109,10 @@ jax和tensorflow后端只能在linux使用cuda
   | [RoformerV2](https://github.com/pass-lin/bert4keras3/blob/main/examples/roformerv2_extract_features.py)  | RoformerV2-Small-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Small-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Base-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Base-CN-Keras) |√|  FP32|Tokenizer|
   | | RoformerV2-Large-CN|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerV2-Large-CN-Keras) |√|  FP32|Tokenizer|
-  | [RoformerSim](https://github.com/pass-lin/bert4keras3/edit/main/examples/test_roformer_sim.py)  |RoformerSim-Small|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Small) |√|  FP32|Tokenizer|
-  ||RoformerSim-Ft-Small |  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Ft-Small) |√|  FP32|Tokenizer|
-  ||RoformerSim-Base |  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Base) |√|  FP32|Tokenizer|
-  ||RoformerSim-Ft_Base|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Ft_Base) |√|  FP32|Tokenizer|
+  | [RoformerSim](https://github.com/pass-lin/bert4keras3/edit/main/examples/test_roformer_sim.py)  |RoformerSim-Small|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Small-Keras) |√|  FP32|Tokenizer|
+  ||RoformerSim-Ft-Small |  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Ft-Small-Keras) |√|  FP32|Tokenizer|
+  ||RoformerSim-Base |  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Base-Keras) |√|  FP32|Tokenizer|
+  ||RoformerSim-Ft_Base|  [ModelScope](https://modelscope.cn/models/q935499957/RoformerSim-Ft_Base-Keras) |√|  FP32|Tokenizer|
   | [Derberta](https://github.com/pass-lin/bert4keras3/blob/main/examples/test_deberta.py)  | Deberta_v3_Small_En|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_small_en-Keras) |x|  FP32|SpTokenizer|
   || Deberta_v3_Base_En|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_base_en-Keras) |x|  FP32|SpTokenizer|
   || Deberta_v3_Large_En|  [ModelScope](https://modelscope.cn/models/q935499957/Deberta_v3_large_en-Keras) |x|  FP32|SpTokenizer|
